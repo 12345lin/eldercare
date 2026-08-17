@@ -1,0 +1,63 @@
+# ==================== Spring 核心配置 ====================
+spring:
+  application:
+    name: eldercare                              # 应用名称
+
+  # ==================== 数据库配置 ====================
+  datasource:
+    url: jdbc:mysql://localhost:3306/eldercare?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true  # 数据库连接地址
+    username: root                               # 数据库用户名
+    password: 123456                             # 数据库密码
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL驱动类
+
+  # ==================== Redis配置 ====================
+  data:
+    redis:
+      host: 127.0.0.1                            # Redis服务器地址
+      port: 6379                                 # Redis端口
+      password: ${REDIS_PASSWORD:}               # Redis密码（通过环境变量读取，默认为空）
+      timeout: 3s                                # 连接超时时间
+      lettuce:                                   # Lettuce客户端连接池配置
+        pool:
+          max-active: 16                         # 最大活跃连接数
+          max-idle: 8                            # 最大空闲连接数
+          min-idle: 2                            # 最小空闲连接数
+
+  # ==================== 文件上传配置 ====================
+  servlet:
+    multipart:
+      max-file-size: 20MB                        # 单个文件最大大小
+      max-request-size: 20MB                     # 单次请求最大大小
+
+  # ==================== Spring AI 配置（使用 Agnes） ====================
+  ai:
+    openai:
+      api-key: sk-qJ1cVyTkwWwQzmGNyT805oYeaUwZXDHbqzyLuXSYi2Uw5u7o
+      base-url: https://apihub.agnes-ai.com/v1   # Agnes API 地址
+      chat:
+        options:
+          model: agnes-2.5-flash                 # 使用 Agnes Flash 模型（免费、快速）
+          temperature: 0.7
+
+# ==================== 服务器配置 ====================
+server:
+  port: 8080                                     # 服务端口号
+
+# ==================== MyBatis配置 ====================
+mybatis:
+  mapper-locations: classpath:mapper/*.xml       # Mapper XML文件位置
+  type-aliases-package: com.wmm.eldercare.core.pojo  # 实体类别名包
+  configuration:
+    map-underscore-to-camel-case: true           # 下划线命名自动转驼峰命名
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # SQL日志输出到控制台
+
+# ==================== 日志配置 ====================
+logging:
+  level:
+    com.wmm.eldercare: debug                     # 项目包日志级别
+
+# ==================== JWT配置 ====================
+jwt:
+  secret: eldercare-secret-key-for-jwt-token-generation-2026
+  access-token-expire-hours: 2
+  refresh-token-expire-days: 7

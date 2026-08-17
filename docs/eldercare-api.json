@@ -1,0 +1,1279 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AI 智能养老社区管理系统 API",
+    "description": "eldercare 项目全部接口文档，用于 Apifox 导入",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:8080", "description": "本地开发环境" }
+  ],
+  "tags": [
+    { "name": "认证", "description": "注册/登录/登出/刷新Token" },
+    { "name": "健康记录", "description": "会员端 - 血压/血糖/心率等健康数据" },
+    { "name": "健康评测", "description": "会员端 - 问卷评测 + AI评分" },
+    { "name": "AI对话", "description": "会员端 - AI健康顾问对话（SSE流式）" },
+    { "name": "体检预约", "description": "会员端 - 体检套餐预约" },
+    { "name": "社区活动", "description": "会员端 - 活动报名/签到" },
+    { "name": "个人中心", "description": "会员端 - 个人信息/消息" },
+    { "name": "用户管理", "description": "管理端 - 用户增删改查" },
+    { "name": "仪表盘", "description": "管理端 - 数据统计概览" },
+    { "name": "会员管理", "description": "管理端 - 会员状态/等级/积分管理" },
+    { "name": "体检管理", "description": "管理端 - 套餐/时段/预约/报告" },
+    { "name": "评测管理", "description": "管理端 - 问卷/题目/结果" },
+    { "name": "活动管理", "description": "管理端 - 活动CRUD" },
+    { "name": "消息管理", "description": "管理端 - 消息推送" },
+    { "name": "系统配置", "description": "管理端 - 系统参数配置" }
+  ],
+  "paths": {
+    "======================================== 认证模块 ========================================": {},
+    "/api/auth/send-code": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "发送短信验证码",
+        "operationId": "sendCode",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone"],
+                "properties": { "phone": { "type": "string", "description": "手机号", "example": "13812345678" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "用户注册",
+        "operationId": "register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone", "password", "code"],
+                "properties": {
+                  "phone": { "type": "string", "description": "手机号", "example": "13812345678" },
+                  "password": { "type": "string", "description": "密码", "example": "Test@123456" },
+                  "code": { "type": "string", "description": "短信验证码", "example": "123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "用户登录",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone", "password"],
+                "properties": {
+                  "phone": { "type": "string", "description": "手机号", "example": "13800138000" },
+                  "password": { "type": "string", "description": "密码", "example": "Test@123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功，返回accessToken+refreshToken", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "用户登出",
+        "operationId": "logout",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "刷新Token",
+        "operationId": "refreshToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["refreshToken"],
+                "properties": { "refreshToken": { "type": "string", "description": "刷新令牌", "example": "eyJhbGciOiJIUzI1NiJ9..." } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功，返回新accessToken", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "重置密码",
+        "operationId": "resetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone", "code", "password"],
+                "properties": {
+                  "phone": { "type": "string", "description": "手机号", "example": "13812345678" },
+                  "code": { "type": "string", "description": "短信验证码", "example": "123456" },
+                  "password": { "type": "string", "description": "新密码", "example": "NewPass@123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 健康记录 ========================================": {},
+    "/api/health-records": {
+      "post": {
+        "tags": ["健康记录"],
+        "summary": "添加健康记录",
+        "operationId": "addHealthRecord",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "systolic": { "type": "integer", "description": "收缩压(mmHg)", "example": 120 },
+                  "diastolic": { "type": "integer", "description": "舒张压(mmHg)", "example": 80 },
+                  "bloodSugar": { "type": "number", "description": "血糖(mmol/L)", "example": 5.6 },
+                  "heartRate": { "type": "integer", "description": "心率(次/分)", "example": 72 },
+                  "weight": { "type": "number", "description": "体重(kg)", "example": 65.5 },
+                  "bmi": { "type": "number", "description": "BMI指数", "example": 22.5 },
+                  "memo": { "type": "string", "description": "备注", "example": "今天感觉良好" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "get": {
+        "tags": ["健康记录"],
+        "summary": "分页查询健康记录",
+        "operationId": "listHealthRecords",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/health-records/{id}": {
+      "get": {
+        "tags": ["健康记录"],
+        "summary": "查看健康记录详情",
+        "operationId": "getHealthRecord",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "delete": {
+        "tags": ["健康记录"],
+        "summary": "删除健康记录",
+        "operationId": "deleteHealthRecord",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 健康评测 ========================================": {},
+    "/api/assessments": {
+      "get": {
+        "tags": ["健康评测"],
+        "summary": "问卷列表",
+        "operationId": "listAssessments",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/assessments/{id}": {
+      "get": {
+        "tags": ["健康评测"],
+        "summary": "问卷详情（含题目列表）",
+        "operationId": "getAssessment",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/assessments/{id}/submit": {
+      "post": {
+        "tags": ["健康评测"],
+        "summary": "提交答案（AI评分+建议）",
+        "operationId": "submitAssessment",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "问卷ID", "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "answers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "questionId": { "type": "integer", "format": "int64" },
+                        "answer": { "type": "string" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "answers": [
+                    { "questionId": 1, "answer": "31-45岁" },
+                    { "questionId": 2, "answer": "一般，偶尔失眠" },
+                    { "questionId": 3, "answer": "1-2 次" },
+                    { "questionId": 4, "answer": "平时身体还行，偶尔感冒" }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功，返回AI评分+建议", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/assessments/results": {
+      "get": {
+        "tags": ["健康评测"],
+        "summary": "我的评测记录",
+        "operationId": "listAssessmentResults",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/assessments/results/{id}": {
+      "get": {
+        "tags": ["健康评测"],
+        "summary": "评测结果详情",
+        "operationId": "getAssessmentResult",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== AI对话 ========================================": {},
+    "/api/ai-chat/sessions": {
+      "get": {
+        "tags": ["AI对话"],
+        "summary": "会话列表",
+        "operationId": "listChatSessions",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "post": {
+        "tags": ["AI对话"],
+        "summary": "创建会话",
+        "operationId": "createChatSession",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "sessionName": { "type": "string", "description": "会话名称", "example": "健康咨询" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/ai-chat/sessions/{id}": {
+      "delete": {
+        "tags": ["AI对话"],
+        "summary": "删除会话",
+        "operationId": "deleteChatSession",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/ai-chat/sessions/{id}/messages": {
+      "get": {
+        "tags": ["AI对话"],
+        "summary": "历史消息",
+        "operationId": "getChatMessages",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "会话ID", "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/ai-chat/stream": {
+      "post": {
+        "tags": ["AI对话"],
+        "summary": "发送消息（SSE流式返回）",
+        "description": "Content-Type: text/event-stream，前端用 EventSource 接收",
+        "operationId": "chatStream",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId", "message"],
+                "properties": {
+                  "sessionId": { "type": "integer", "format": "int64", "description": "会话ID", "example": 1 },
+                  "message": { "type": "string", "description": "用户消息", "example": "我最近血压有点高，该注意什么？" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "SSE流式响应" } }
+      }
+    },
+    "/api/ai-chat/health-analysis": {
+      "post": {
+        "tags": ["AI对话"],
+        "summary": "健康数据分析",
+        "description": "将最近健康记录发送给AI进行分析",
+        "operationId": "healthAnalysis",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "SSE流式响应" } }
+      }
+    },
+
+    "======================================== 体检预约 ========================================": {},
+    "/api/appointments/packages": {
+      "get": {
+        "tags": ["体检预约"],
+        "summary": "套餐列表",
+        "operationId": "listPackages",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/appointments/packages/{id}": {
+      "get": {
+        "tags": ["体检预约"],
+        "summary": "套餐详情",
+        "operationId": "getPackage",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/appointments/slots": {
+      "get": {
+        "tags": ["体检预约"],
+        "summary": "查询可预约时段",
+        "operationId": "listSlots",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "packageId", "in": "query", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 },
+          { "name": "date", "in": "query", "required": true, "schema": { "type": "string", "format": "date" }, "example": "2026-08-20" }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/appointments": {
+      "post": {
+        "tags": ["体检预约"],
+        "summary": "提交预约",
+        "operationId": "createAppointment",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slotId", "packageId"],
+                "properties": {
+                  "slotId": { "type": "integer", "format": "int64", "example": 1 },
+                  "packageId": { "type": "integer", "format": "int64", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "get": {
+        "tags": ["体检预约"],
+        "summary": "我的预约列表",
+        "operationId": "listMyAppointments",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/appointments/{id}": {
+      "delete": {
+        "tags": ["体检预约"],
+        "summary": "取消预约",
+        "operationId": "cancelAppointment",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 社区活动 ========================================": {},
+    "/api/activities": {
+      "get": {
+        "tags": ["社区活动"],
+        "summary": "活动列表",
+        "operationId": "listActivities",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 },
+          { "name": "status", "in": "query", "schema": { "type": "string" }, "description": "状态筛选", "example": "REGISTRATING" }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/activities/{id}": {
+      "get": {
+        "tags": ["社区活动"],
+        "summary": "活动详情",
+        "operationId": "getActivity",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/activities/{id}/register": {
+      "post": {
+        "tags": ["社区活动"],
+        "summary": "报名活动",
+        "operationId": "registerActivity",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "活动ID", "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "delete": {
+        "tags": ["社区活动"],
+        "summary": "取消报名",
+        "operationId": "cancelRegistration",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "活动ID", "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/activities/my-registrations": {
+      "get": {
+        "tags": ["社区活动"],
+        "summary": "我的报名列表",
+        "operationId": "listMyRegistrations",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/activities/{id}/checkin": {
+      "post": {
+        "tags": ["社区活动"],
+        "summary": "活动签到",
+        "operationId": "checkinActivity",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "活动ID", "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 个人中心 ========================================": {},
+    "/api/profile": {
+      "get": {
+        "tags": ["个人中心"],
+        "summary": "查看个人信息",
+        "operationId": "getProfile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "put": {
+        "tags": ["个人中心"],
+        "summary": "修改个人信息",
+        "operationId": "updateProfile",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "realName": { "type": "string", "example": "张三" },
+                  "gender": { "type": "string", "example": "男" },
+                  "birthDate": { "type": "string", "format": "date", "example": "1950-06-15" },
+                  "height": { "type": "number", "example": 170 },
+                  "avatar": { "type": "string", "example": "https://example.com/avatar.jpg" },
+                  "emergencyContact": { "type": "string", "example": "13800001111" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/profile/password": {
+      "put": {
+        "tags": ["个人中心"],
+        "summary": "修改密码",
+        "operationId": "updatePassword",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["oldPassword", "newPassword"],
+                "properties": {
+                  "oldPassword": { "type": "string", "example": "Test@123456" },
+                  "newPassword": { "type": "string", "example": "NewPass@123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/profile/messages": {
+      "get": {
+        "tags": ["个人中心"],
+        "summary": "我的消息列表",
+        "operationId": "listMyMessages",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/profile/messages/{id}/read": {
+      "put": {
+        "tags": ["个人中心"],
+        "summary": "标记消息已读",
+        "operationId": "markMessageRead",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 用户管理 ========================================": {},
+    "/api/admin/users": {
+      "post": {
+        "tags": ["用户管理"],
+        "summary": "添加用户",
+        "operationId": "addUser",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone", "password"],
+                "properties": {
+                  "phone": { "type": "string", "example": "13812345678" },
+                  "password": { "type": "string", "example": "Test@123456" },
+                  "realName": { "type": "string", "example": "张三" },
+                  "gender": { "type": "string", "example": "男" },
+                  "birthDate": { "type": "string", "format": "date", "example": "1950-06-15" },
+                  "height": { "type": "number", "example": 170 },
+                  "avatar": { "type": "string", "example": "https://example.com/avatar.jpg" },
+                  "emergencyContact": { "type": "string", "example": "13800001111" },
+                  "role": { "type": "string", "description": "MEMBER/ADMIN", "example": "MEMBER" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "tags": ["用户管理"],
+        "summary": "根据ID查询用户",
+        "operationId": "findUserById",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "put": {
+        "tags": ["用户管理"],
+        "summary": "更新用户",
+        "operationId": "updateUser",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone": { "type": "string", "example": "13812345678" },
+                  "realName": { "type": "string", "example": "张三（已修改）" },
+                  "memberLevel": { "type": "string", "description": "NORMAL/SILVER/GOLD/PLATINUM/DIAMOND", "example": "SILVER" },
+                  "status": { "type": "string", "description": "ENABLED/DISABLED" },
+                  "role": { "type": "string", "description": "MEMBER/ADMIN" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "delete": {
+        "tags": ["用户管理"],
+        "summary": "删除用户（逻辑删除）",
+        "operationId": "deleteUser",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/users/list": {
+      "get": {
+        "tags": ["用户管理"],
+        "summary": "分页查询用户列表",
+        "operationId": "listUsers",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/users/batch": {
+      "delete": {
+        "tags": ["用户管理"],
+        "summary": "批量删除用户",
+        "operationId": "batchDeleteUsers",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "array", "items": { "type": "integer", "format": "int64" } },
+              "example": [1, 2, 3]
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 仪表盘 ========================================": {},
+    "/api/admin/dashboard": {
+      "get": {
+        "tags": ["仪表盘"],
+        "summary": "统计概览",
+        "operationId": "getDashboard",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "成功，返回用户数/预约数/活动数等统计", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 会员管理 ========================================": {},
+    "/api/admin/members": {
+      "get": {
+        "tags": ["会员管理"],
+        "summary": "会员分页列表",
+        "operationId": "listMembers",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 },
+          { "name": "keyword", "in": "query", "schema": { "type": "string" }, "description": "搜索关键词（手机号/姓名）", "example": "张三" },
+          { "name": "status", "in": "query", "schema": { "type": "string" }, "description": "状态筛选", "example": "ENABLED" }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/members/{id}": {
+      "get": {
+        "tags": ["会员管理"],
+        "summary": "会员详情",
+        "operationId": "getMember",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/members/{id}/status": {
+      "put": {
+        "tags": ["会员管理"],
+        "summary": "启用/禁用会员",
+        "operationId": "updateMemberStatus",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": { "status": { "type": "string", "description": "ENABLED/DISABLED", "example": "DISABLED" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/members/{id}/level": {
+      "put": {
+        "tags": ["会员管理"],
+        "summary": "修改会员等级",
+        "operationId": "updateMemberLevel",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["memberLevel"],
+                "properties": { "memberLevel": { "type": "string", "description": "NORMAL/SILVER/GOLD/PLATINUM/DIAMOND", "example": "GOLD" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/members/{id}/points": {
+      "put": {
+        "tags": ["会员管理"],
+        "summary": "修改积分",
+        "operationId": "updateMemberPoints",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["points"],
+                "properties": { "points": { "type": "integer", "description": "积分值", "example": 500 } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/members/{id}/reset-password": {
+      "put": {
+        "tags": ["会员管理"],
+        "summary": "重置密码",
+        "operationId": "resetMemberPassword",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["password"],
+                "properties": { "password": { "type": "string", "description": "新密码", "example": "Reset@123456" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 体检管理 ========================================": {},
+    "/api/admin/appointments/packages": {
+      "post": {
+        "tags": ["体检管理"],
+        "summary": "新增套餐",
+        "operationId": "addPackage",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "price"],
+                "properties": {
+                  "name": { "type": "string", "example": "VIP全面体检套餐" },
+                  "coverUrl": { "type": "string", "example": "https://example.com/cover.jpg" },
+                  "description": { "type": "string", "example": "包含全面检查项目" },
+                  "price": { "type": "integer", "example": 2000 },
+                  "suitablePeople": { "type": "string", "example": "所有人群" },
+                  "items": { "type": "array", "items": { "type": "string" }, "example": ["血常规", "心电图", "B超"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/appointments/packages/{id}": {
+      "put": {
+        "tags": ["体检管理"],
+        "summary": "修改套餐",
+        "operationId": "updatePackage",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "example": "VIP全面体检套餐（升级版）" },
+                  "price": { "type": "integer", "example": 2500 },
+                  "status": { "type": "string", "description": "ENABLED/DISABLED", "example": "ENABLED" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "delete": {
+        "tags": ["体检管理"],
+        "summary": "删除套餐",
+        "operationId": "deletePackage",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/appointments/slots": {
+      "post": {
+        "tags": ["体检管理"],
+        "summary": "批量生成时段",
+        "operationId": "generateSlots",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["packageId", "date", "timeRanges"],
+                "properties": {
+                  "packageId": { "type": "integer", "format": "int64", "example": 1 },
+                  "date": { "type": "string", "format": "date", "example": "2026-08-20" },
+                  "timeRanges": { "type": "array", "items": { "type": "string" }, "example": ["09:00-10:00", "10:00-11:00", "14:00-15:00"] },
+                  "maxCount": { "type": "integer", "default": 10, "example": 10 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/appointments": {
+      "get": {
+        "tags": ["体检管理"],
+        "summary": "预约列表（管理端）",
+        "operationId": "listAdminAppointments",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 },
+          { "name": "status", "in": "query", "schema": { "type": "string" }, "description": "PENDING/CONFIRMED/CANCELED/COMPLETED", "example": "PENDING" }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/appointments/{id}/status": {
+      "put": {
+        "tags": ["体检管理"],
+        "summary": "修改预约状态",
+        "operationId": "updateAppointmentStatus",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": { "status": { "type": "string", "description": "PENDING/CONFIRMED/CANCELED/COMPLETED", "example": "CONFIRMED" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/appointments/{id}/report": {
+      "post": {
+        "tags": ["体检管理"],
+        "summary": "上传体检报告",
+        "operationId": "uploadReport",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": { "file": { "type": "string", "format": "binary", "description": "PDF文件" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 评测管理 ========================================": {},
+    "/api/admin/assessments": {
+      "post": {
+        "tags": ["评测管理"],
+        "summary": "创建问卷",
+        "operationId": "createQuestionnaire",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string", "example": "老年心理健康评估" },
+                  "description": { "type": "string", "example": "评估老年人心理状态" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/assessments/{id}": {
+      "put": {
+        "tags": ["评测管理"],
+        "summary": "修改问卷",
+        "operationId": "updateQuestionnaire",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "老年心理健康评估（修订版）" },
+                  "status": { "type": "string", "description": "DRAFT/PUBLISHED", "example": "PUBLISHED" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "delete": {
+        "tags": ["评测管理"],
+        "summary": "删除问卷",
+        "operationId": "deleteQuestionnaire",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/assessments/{id}/questions": {
+      "post": {
+        "tags": ["评测管理"],
+        "summary": "添加题目",
+        "operationId": "addQuestion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "问卷ID", "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content", "type"],
+                "properties": {
+                  "content": { "type": "string", "example": "您最近心情如何？" },
+                  "type": { "type": "string", "description": "SINGLE/MULTIPLE/TEXT", "example": "SINGLE" },
+                  "options": { "type": "array", "items": { "type": "string" }, "example": ["很好", "一般", "不太好", "很差"] },
+                  "sortOrder": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/assessments/questions/{id}": {
+      "put": {
+        "tags": ["评测管理"],
+        "summary": "修改题目",
+        "operationId": "updateQuestion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "题目ID", "example": 1 }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": { "type": "string", "example": "您最近心情如何？（修改后）" },
+                  "type": { "type": "string", "example": "SINGLE" },
+                  "options": { "type": "array", "items": { "type": "string" }, "example": ["很好", "一般", "不太好", "很差"] },
+                  "sortOrder": { "type": "integer", "example": 2 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "delete": {
+        "tags": ["评测管理"],
+        "summary": "删除题目",
+        "operationId": "deleteQuestion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "题目ID", "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/assessments/results": {
+      "get": {
+        "tags": ["评测管理"],
+        "summary": "评测结果列表",
+        "operationId": "listAdminAssessmentResults",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 活动管理 ========================================": {},
+    "/api/admin/activities": {
+      "post": {
+        "tags": ["活动管理"],
+        "summary": "创建活动",
+        "operationId": "createActivity",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "activityStart", "activityEnd"],
+                "properties": {
+                  "title": { "type": "string", "example": "社区健康讲座" },
+                  "coverUrl": { "type": "string", "example": "https://example.com/cover.jpg" },
+                  "content": { "type": "string", "example": "邀请专家讲解老年人常见疾病预防" },
+                  "registrationStart": { "type": "string", "format": "date-time", "example": "2026-08-15T00:00:00" },
+                  "registrationEnd": { "type": "string", "format": "date-time", "example": "2026-08-25T23:59:59" },
+                  "activityStart": { "type": "string", "format": "date-time", "example": "2026-08-28T14:00:00" },
+                  "activityEnd": { "type": "string", "format": "date-time", "example": "2026-08-28T16:00:00" },
+                  "maxParticipants": { "type": "integer", "example": 50 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/activities/{id}": {
+      "put": {
+        "tags": ["活动管理"],
+        "summary": "修改活动",
+        "operationId": "updateActivity",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "社区健康讲座（改期）" },
+                  "status": { "type": "string", "description": "DRAFT/REGISTRATING/IN_PROGRESS/ENDED", "example": "REGISTRATING" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "delete": {
+        "tags": ["活动管理"],
+        "summary": "删除活动",
+        "operationId": "deleteActivity",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/activities/{id}/registrations": {
+      "get": {
+        "tags": ["活动管理"],
+        "summary": "活动报名列表",
+        "operationId": "listActivityRegistrations",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "活动ID", "example": 1 }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 消息管理 ========================================": {},
+    "/api/admin/messages": {
+      "post": {
+        "tags": ["消息管理"],
+        "summary": "推送消息",
+        "operationId": "pushMessage",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "content"],
+                "properties": {
+                  "title": { "type": "string", "example": "系统通知" },
+                  "content": { "type": "string", "example": "您的体检报告已生成，请查看" },
+                  "type": { "type": "string", "description": "APPOINTMENT/ACTIVITY/SYSTEM", "example": "APPOINTMENT" },
+                  "userIds": { "type": "array", "items": { "type": "integer", "format": "int64" }, "description": "指定用户ID列表，不传则推送给全部用户", "example": [1, 2] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      },
+      "get": {
+        "tags": ["消息管理"],
+        "summary": "消息列表",
+        "operationId": "listAdminMessages",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 }, "example": 1 },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 }, "example": 10 }
+        ],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+
+    "======================================== 系统配置 ========================================": {},
+    "/api/admin/configs": {
+      "get": {
+        "tags": ["系统配置"],
+        "summary": "配置列表",
+        "operationId": "listConfigs",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    },
+    "/api/admin/configs/{id}": {
+      "put": {
+        "tags": ["系统配置"],
+        "summary": "修改配置",
+        "operationId": "updateConfig",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" }, "example": 1 }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["configValue"],
+                "properties": { "configValue": { "type": "string", "description": "配置值", "example": "200" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Result" } } } } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "在请求头中添加 Authorization: Bearer {token}"
+      }
+    },
+    "schemas": {
+      "Result": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "description": "状态码，200表示成功", "example": 200 },
+          "message": { "type": "string", "description": "提示信息", "example": "success" },
+          "data": { "description": "响应数据" },
+          "traceId": { "type": "string", "description": "请求追踪ID" }
+        }
+      }
+    }
+  }
+}

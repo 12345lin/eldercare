@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.UserMapper">
+
+    <!-- 插入用户 -->
+    <insert id="addUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (phone, password, real_name, gender, birth_date,
+                          height, avatar, emergency_contact, member_level,
+                          points, status, role, create_time, update_time, deleted)
+        VALUES (#{phone}, #{password}, #{realName}, #{gender}, #{birthDate},
+                #{height}, #{avatar}, #{emergencyContact}, #{memberLevel},
+                #{points}, #{status}, #{role}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+    <update id="updateUser" parameterType="User">
+            UPDATE user
+            <set>
+                <if test="user.phone != null and user.phone != ''">phone = #{user.phone},</if>
+                <if test="user.password != null and user.password != ''">password = #{user.password},</if>
+                <if test="user.realName != null and user.realName != ''">real_name = #{user.realName},</if>
+                <if test="user.gender != null and user.gender != ''">gender = #{user.gender},</if>
+                <if test="user.birthDate != null">birth_date = #{user.birthDate},</if>
+                <if test="user.height != null">height = #{user.height},</if>
+                <if test="user.avatar != null and user.avatar != ''">avatar = #{user.avatar},</if>
+                <if test="user.emergencyContact != null and user.emergencyContact != ''">emergency_contact = #{user.emergencyContact},</if>
+                <if test="user.memberLevel != null and user.memberLevel != ''">member_level = #{user.memberLevel},</if>
+                <if test="user.points != null">points = #{user.points},</if>
+                <if test="user.status != null and user.status != ''">status = #{user.status},</if>
+                <if test="user.role != null and user.role != ''">role = #{user.role},</if>
+                <if test="user.updateTime != null">update_time = #{user.updateTime} ,</if>
+            </set>
+            WHERE id = #{userId} AND deleted = 0
+        </update>
+    <update id="deleteUser" parameterType="java.lang.Long">
+        UPDATE user SET deleted = 1 WHERE id = #{id} AND deleted = 0
+    </update>
+    <update id="batchDeleteUsers" parameterType="java.util.List">
+        UPDATE user SET deleted = 1 WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        and deleted = 0
+    </update>
+    <select id="findUserById" resultType="com.wmm.eldercare.core.pojo.User">
+        SELECT id, phone, real_name, gender, birth_date, height,
+               avatar, emergency_contact, member_level, points, status,
+               role, create_time, update_time FROM user WHERE id = #{id} AND deleted = 0
+    </select>
+    <select id="listUsers" resultType="com.wmm.eldercare.core.pojo.User">
+        SELECT id, phone, real_name, gender, birth_date, height,
+               avatar, emergency_contact, member_level, points, status,
+               role, create_time, update_time FROM user WHERE deleted = 0
+    </select>
+    <select id="findByPhone" resultType="com.wmm.eldercare.core.pojo.User">
+        SELECT id, phone, real_name, gender, birth_date, height,
+               avatar, emergency_contact, member_level, points, status,
+               role, create_time, update_time FROM user WHERE phone = #{phone} AND deleted = 0
+    </select>
+    <!-- 登录专用：查询用户时带上密码字段（用于密码校验） -->
+    <select id="findByPhoneWithPassword" resultType="com.wmm.eldercare.core.pojo.User">
+        SELECT id, phone, password, real_name, gender, birth_date, height,
+               avatar, emergency_contact, member_level, points, status,
+               role, create_time, update_time FROM user WHERE phone = #{phone} AND deleted = 0
+    </select>
+</mapper>
