@@ -165,6 +165,10 @@
 | 修复 updateUser 参数绑定 Bug | ✅ | @Param("user") + XML 加 user. 前缀 |
 | Spring Boot 4 测试依赖 | ✅ | 加了 spring-boot-starter-webmvc-test |
 | 认证模块 6 个接口 | ✅ 全部完成 | send-code/register/login/refresh/logout/reset-password |
+| 健康记录模块 CRUD | ✅ 完成 | 4 个接口:添加(自动算BMI)/分页/详情/逻辑删除 |
+| 健康趋势分析接口 | ✅ 完成 | GET /api/health-records/trend,最近6个月 avg/max/min |
+| BMI 自动计算 | ✅ 验证通过 | 身高170cm+体重68kg → BMI=23.5(体重/身高m²) |
+| git 提交推送 | ✅ 完成 | commit 1a9a884,已 push 到 GitHub main
 
 ### 今日用户问的问题
 
@@ -198,6 +202,23 @@
 - `@AutoConfigureMockMvc` 不在 spring-boot-starter-test 里，要加 `spring-boot-starter-webmvc-test`
 - Jackson 3 包名变成 `tools.jackson.databind`（不是 com.fasterxml）
 - 测试类跑不通，暂时放弃，改用 Postman/接口工具手动测试
+
+**坑 6：添加记录 500 "系统异常" — curl 中文编码坑（不是代码问题！）**
+- 现象：curl 发 `memo:"小码测试"` → JSON parse error: Invalid UTF-8 middle byte 0xeb
+- 原因：Windows bash 里 curl -d 的中文被编码成 GBK，服务器按 UTF-8 解析失败
+- 解决：Apifox 正常(UTF-8)；命令行测试用纯英文 memo，或加 `--data-binary` 手动指定 UTF-8
+- 教训：**先怀疑工具，再怀疑代码**！服务端堆栈 `HttpMessageNotReadableException` 一看就懂
+
+**坑 7："登录已过期" 排查套路**
+- 现象：明明登录成功，接口却 401
+- 排查：1) 从 Apifox 响应复制 accessToken(不是日志里的 refreshToken) 2) 别带引号/Bearer 后要有空格 3) 用 Python 验签 token(secret在application.yaml) 最靠谱
+- 本坑不是代码问题，是复制粘贴问题
+
+## 明日计划
+
+| 任务 | 优先级 | 说明 |
+|------|--------|------|
+| 开始积分系统（PointsService） | ⭐⭐⭐ | 按 MODULE_STEPS 顺序：健康记录 → 积分系统 |
 
 ---
 
