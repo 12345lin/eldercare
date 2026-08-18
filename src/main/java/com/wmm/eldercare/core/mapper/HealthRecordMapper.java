@@ -21,6 +21,11 @@ public interface HealthRecordMapper {
     List<HealthRecord> findByUserId(Long userId);
 
     /**
+     * 统计某用户健康记录总数（个人中心统计面板）
+     */
+    int countByUserId(@Param("userId") Long userId);
+
+    /**
      * 查询某用户某条健康记录（userId 防止越权查看别人的记录）
      */
     HealthRecord findById(@Param("id") Long id, @Param("userId") Long userId);

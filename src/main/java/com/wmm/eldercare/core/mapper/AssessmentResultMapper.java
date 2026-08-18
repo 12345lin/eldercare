@@ -25,6 +25,11 @@ public interface AssessmentResultMapper {
     List<AssessmentResult> findByUserId(@Param("userId") Long userId);
 
     /**
+     * 统计某用户评测总次数（个人中心统计面板）
+     */
+    int countByUserId(@Param("userId") Long userId);
+
+    /**
      * 逻辑删除评测结果（防越权：只能删自己的）
      */
     int deleteById(@Param("id") Long id, @Param("userId") Long userId);

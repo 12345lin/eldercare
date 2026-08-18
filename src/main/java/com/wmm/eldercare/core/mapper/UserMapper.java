@@ -12,6 +12,9 @@ public interface UserMapper {
 
     User findUserById(Long id);
 
+    // 个人中心/改密码专用：查询用户时带上密码字段（用于旧密码校验）
+    User findByIdWithPassword(@Param("id") Long id);
+
     int updateUser(@Param("userId") Long id, @Param("user") User user);
 
     int deleteUser(Long id);

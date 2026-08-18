@@ -74,4 +74,10 @@
     <select id="selectPoints" resultType="java.lang.Integer" parameterType="java.lang.Long">
         SELECT points FROM user WHERE id = #{userId} AND deleted = 0
     </select>
+    <!-- 个人中心/改密码专用：查询用户时带上密码字段（用于旧密码校验） -->
+    <select id="findByIdWithPassword" resultType="com.wmm.eldercare.core.pojo.User">
+        SELECT id, phone, password, real_name, gender, birth_date, height,
+               avatar, emergency_contact, member_level, points, status,
+               role, create_time, update_time FROM user WHERE id = #{id} AND deleted = 0
+    </select>
 </mapper>

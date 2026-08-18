@@ -42,4 +42,9 @@
         WHERE user_id = #{userId} AND activity_id = #{activityId} AND deleted = 0
     </update>
 
+<!-- 统计某用户报名活动总数（个人中心统计面板） -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM activity_registration WHERE user_id = #{userId} AND deleted = 0
+    </select>
+
 </mapper>

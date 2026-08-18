@@ -50,4 +50,9 @@
         ORDER BY month
     </select>
 
+<!-- 统计某用户健康记录总数（个人中心统计面板） -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM health_record WHERE user_id = #{userId} AND deleted = 0
+    </select>
+
 </mapper>

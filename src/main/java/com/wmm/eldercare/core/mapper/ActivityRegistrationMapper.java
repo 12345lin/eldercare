@@ -26,6 +26,11 @@ public interface ActivityRegistrationMapper {
     List<ActivityRegistration> findByUserId(@Param("userId") Long userId);
 
     /**
+     * 统计某用户报名活动总数（个人中心统计面板）
+     */
+    int countByUserId(@Param("userId") Long userId);
+
+    /**
      * 签到:只有未签到状态才更新,防止重复签到
      *
      * @return 影响行数,0 表示已签过或记录不存在

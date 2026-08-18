@@ -25,6 +25,11 @@ public interface AppointmentMapper {
     List<Appointment> findByUserId(@Param("userId") Long userId);
 
     /**
+     * 统计某用户预约总次数（个人中心统计面板）
+     */
+    int countByUserId(@Param("userId") Long userId);
+
+    /**
      * 更新预约状态
      */
     int updateStatus(@Param("id") Long id, 

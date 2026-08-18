@@ -35,4 +35,9 @@
         WHERE id = #{id} AND user_id = #{userId} AND deleted = 0
     </update>
 
+<!-- 统计某用户评测总次数（个人中心统计面板） -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM assessment_result WHERE user_id = #{userId} AND deleted = 0
+    </select>
+
 </mapper>
