@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.AppointmentSlotMapper">
+
+    <!-- 根据套餐 ID 和日期查询时段列表 -->
+    <select id="findByPackageIdAndDate" resultType="com.wmm.eldercare.core.pojo.AppointmentSlot">
+        SELECT id, package_id, appoint_date, time_range, max_count, current_count, status, create_time, update_time
+        FROM appointment_slot
+        WHERE package_id = #{packageId} AND appoint_date = #{date} AND deleted = 0
+        ORDER BY time_range ASC
+    </select>
+
+    <!-- 根据 ID 查询时段 -->
+    <select id="findById" resultType="com.wmm.eldercare.core.pojo.AppointmentSlot">
+        SELECT id, package_id, appoint_date, time_range, max_count, current_count, status, create_time, update_time
+        FROM appointment_slot
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <!-- 增加已预约人数（防并发） -->
+    <update id="incrementCount">
+        UPDATE appointment_slot
+        SET current_count = current_count + 1
+        WHERE id = #{id} AND current_count &lt; max_count AND deleted = 0
+    </update>
+
+    <!-- 减少已预约人数（取消预约时） -->
+    <update id="decrementCount">
+        UPDATE appointment_slot
+        SET current_count = current_count - 1
+        WHERE id = #{id} AND current_count > 0 AND deleted = 0
+    </update>
+
+</mapper>

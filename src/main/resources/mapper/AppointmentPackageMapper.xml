@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.AppointmentPackageMapper">
+
+    <!-- 查询所有可用套餐 -->
+    <select id="listEnabled" resultType="com.wmm.eldercare.core.pojo.AppointmentPackage">
+        SELECT id, name, cover_url, description, price, suitable_people, items, status, create_time, update_time
+        FROM appointment_package
+        WHERE deleted = 0 AND status = 'ENABLED'
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据 ID 查询套餐 -->
+    <select id="findById" resultType="com.wmm.eldercare.core.pojo.AppointmentPackage">
+        SELECT id, name, cover_url, description, price, suitable_people, items, status, create_time, update_time
+        FROM appointment_package
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+</mapper>
