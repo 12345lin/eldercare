@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.CommunityActivityMapper">
+
+    <!-- 查询会员可见的活动列表(报名中/进行中) -->
+    <select id="listAvailable" resultType="com.wmm.eldercare.core.pojo.CommunityActivity">
+        SELECT id, title, cover_url, content, registration_start, registration_end,
+               activity_start, activity_end, max_participants, current_participants,
+               status, create_time, update_time
+        FROM community_activity
+        WHERE deleted = 0
+          AND status IN ('REGISTRATING', 'IN_PROGRESS')
+        ORDER BY activity_start ASC
+    </select>
+
+    <!-- 根据 ID 查询活动 -->
+    <select id="findById" resultType="com.wmm.eldercare.core.pojo.CommunityActivity">
+        SELECT id, title, cover_url, content, registration_start, registration_end,
+               activity_start, activity_end, max_participants, current_participants,
+               status, create_time, update_time
+        FROM community_activity
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <!-- 原子增加报名人数:只有未满员时才 +1,返回影响行数 -->
+    <update id="incrementParticipants">
+        UPDATE community_activity
+        SET current_participants = current_participants + 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+          AND current_participants &lt; max_participants
+    </update>
+
+    <!-- 原子减少报名人数:取消报名时释放名额 -->
+    <update id="decrementParticipants">
+        UPDATE community_activity
+        SET current_participants = current_participants - 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+          AND current_participants > 0
+    </update>
+
+</mapper>

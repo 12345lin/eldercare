@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.ActivityRegistrationMapper">
+
+    <!-- 插入报名记录 -->
+    <insert id="insert" parameterType="com.wmm.eldercare.core.pojo.ActivityRegistration"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO activity_registration (user_id, activity_id, check_in_status, create_time, update_time, deleted)
+        VALUES (#{userId}, #{activityId}, #{checkInStatus}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 查询用户对某活动的报名记录 -->
+    <select id="findByActivityIdAndUserId" resultType="com.wmm.eldercare.core.pojo.ActivityRegistration">
+        SELECT id, user_id, activity_id, check_in_status, create_time, update_time
+        FROM activity_registration
+        WHERE activity_id = #{activityId} AND user_id = #{userId} AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 查询用户的所有报名记录 -->
+    <select id="findByUserId" resultType="com.wmm.eldercare.core.pojo.ActivityRegistration">
+        SELECT id, user_id, activity_id, check_in_status, create_time, update_time
+        FROM activity_registration
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 签到:只有未签到状态才更新,防止重复签到 -->
+    <update id="updateCheckInStatus">
+        UPDATE activity_registration
+        SET check_in_status = #{checkInStatus}, update_time = NOW()
+        WHERE id = #{id} AND user_id = #{userId} AND deleted = 0
+          AND check_in_status = 'NOT_CHECKED_IN'
+    </update>
+
+    <!-- 取消报名(逻辑删除) -->
+    <update id="cancel">
+        UPDATE activity_registration
+        SET deleted = 1, update_time = NOW()
+        WHERE user_id = #{userId} AND activity_id = #{activityId} AND deleted = 0
+    </update>
+
+</mapper>

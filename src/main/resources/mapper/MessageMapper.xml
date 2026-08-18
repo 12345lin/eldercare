@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.MessageMapper">
+
+    <!-- 插入消息（管理端推送） -->
+    <insert id="insert" parameterType="Message" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO message (user_id, title, content, type, is_read, create_time, update_time, deleted)
+        VALUES (#{userId}, #{title}, #{content}, #{type}, #{isRead}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 分页查询某用户的消息列表（按创建时间倒序） -->
+    <select id="findByUserId" resultType="com.wmm.eldercare.core.pojo.Message">
+        SELECT id, user_id, title, content, type, is_read, create_time, update_time
+        FROM message
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据 ID 查询消息（带归属校验，防越权） -->
+    <select id="findByIdAndUserId" resultType="com.wmm.eldercare.core.pojo.Message">
+        SELECT id, user_id, title, content, type, is_read, create_time, update_time
+        FROM message
+        WHERE id = #{id} AND user_id = #{userId} AND deleted = 0
+    </select>
+
+    <!-- 统计某用户未读消息数 -->
+    <select id="countUnread" resultType="int">
+        SELECT COUNT(*)
+        FROM message
+        WHERE user_id = #{userId} AND is_read = 0 AND deleted = 0
+    </select>
+
+    <!-- 标记单条消息已读（防越权：只能标记自己的） -->
+    <update id="markRead">
+        UPDATE message
+        SET is_read = 1, update_time = NOW()
+        WHERE id = #{id} AND user_id = #{userId} AND is_read = 0 AND deleted = 0
+    </update>
+
+    <!-- 标记某用户全部消息已读 -->
+    <update id="markAllRead">
+        UPDATE message
+        SET is_read = 1, update_time = NOW()
+        WHERE user_id = #{userId} AND is_read = 0 AND deleted = 0
+    </update>
+
+    <!-- 逻辑删除消息（防越权：只能删自己的） -->
+    <update id="deleteById">
+        UPDATE message
+        SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND user_id = #{userId} AND deleted = 0
+    </update>
+
+</mapper>
