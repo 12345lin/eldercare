@@ -42,6 +42,14 @@
         </foreach>
         and deleted = 0
     </update>
+    <update id="updatePoints">
+        UPDATE user SET points = points + #{points} , update_time = NOW() WHERE id = #{userId} AND deleted = 0
+    </update>
+    <!-- 原子扣减积分（防超扣） -->
+    <update id="deductPoints">
+        UPDATE user SET points = points - #{points}, update_time = NOW()
+        WHERE id = #{userId} AND points >= #{points}
+    </update>
     <select id="findUserById" resultType="com.wmm.eldercare.core.pojo.User">
         SELECT id, phone, real_name, gender, birth_date, height,
                avatar, emergency_contact, member_level, points, status,
@@ -62,5 +70,8 @@
         SELECT id, phone, password, real_name, gender, birth_date, height,
                avatar, emergency_contact, member_level, points, status,
                role, create_time, update_time FROM user WHERE phone = #{phone} AND deleted = 0
+    </select>
+    <select id="selectPoints" resultType="java.lang.Integer" parameterType="java.lang.Long">
+        SELECT points FROM user WHERE id = #{userId} AND deleted = 0
     </select>
 </mapper>

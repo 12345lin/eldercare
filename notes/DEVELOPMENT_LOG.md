@@ -169,6 +169,9 @@
 | 健康趋势分析接口 | ✅ 完成 | GET /api/health-records/trend,最近6个月 avg/max/min |
 | BMI 自动计算 | ✅ 验证通过 | 身高170cm+体重68kg → BMI=23.5(体重/身高m²) |
 | git 提交推送 | ✅ 完成 | commit 1a9a884,已 push 到 GitHub main
+| 积分系统(宝宝写) | ✅ 完成 | 查看积分/流水/管理员调整/防超扣,5个用例全通过 |
+| 积分bug修复(小码+宝宝) | ✅ | ① session→getAttribute ② adjustPoints补setAmount |
+| 防超扣原子化改造 | ✅ | 扣分走 deductPoints(WHERE points>=扣减量),不再先扣后回滚,并发安全 |
 
 ### 今日用户问的问题
 

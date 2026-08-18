@@ -30,6 +30,11 @@ public class HealthRecordServiceImpl implements HealthRecordService {
 
     private final UserMapper userMapper;
 
+    /**
+     * 添加健康记录
+     * @param userId
+     * @param dto
+     */
     @Override
     public void addHealthRecord(Long userId, HealthRecordAddDTO dto) {
         HealthRecord healthRecord = new HealthRecord();
@@ -59,10 +64,20 @@ public class HealthRecordServiceImpl implements HealthRecordService {
         healthRecordMapper.insert(healthRecord);
     }
 
+    /**
+     * 分页查询某用户所有健康记录
+     * @param userId
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
     @Override
     public PageResult<HealthRecord> listHealthRecords(Long userId, Integer pageNum, Integer pageSize) {
+        //1. 开启分页查询
         PageHelper.startPage(pageNum, pageSize);
+        //2. 执行查询
         List<HealthRecord> list = healthRecordMapper.findByUserId(userId);
+        //3. 组装分页结果
         PageInfo<HealthRecord> pageInfo = new PageInfo<>(list);
         return new PageResult<>(
                 pageInfo.getTotal(),
@@ -73,6 +88,12 @@ public class HealthRecordServiceImpl implements HealthRecordService {
         );
     }
 
+    /**
+     * 查询某用户某条健康记录详情
+     * @param userId
+     * @param id
+     * @return
+     */
     @Override
     public HealthRecord getHealthRecord(Long userId, Long id) {
         HealthRecord record = healthRecordMapper.findById(id, userId);
@@ -82,6 +103,11 @@ public class HealthRecordServiceImpl implements HealthRecordService {
         return record;
     }
 
+    /**
+     * 逻辑删除某用户某条健康记录
+     * @param userId
+     * @param id
+     */
     @Override
     public void deleteHealthRecord(Long userId, Long id) {
         int rows = healthRecordMapper.deleteById(id, userId);
@@ -90,6 +116,11 @@ public class HealthRecordServiceImpl implements HealthRecordService {
         }
     }
 
+    /**
+     * 健康趋势分析：按月份聚合最近 6 个月的平均值/最大值/最小值
+     * @param userId
+     * @return
+     */
     @Override
     public HealthTrendVO getTrend(Long userId) {
         List<MonthlyHealthStatVO> stats = healthRecordMapper.selectMonthlyStats(userId, 6);

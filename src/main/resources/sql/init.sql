@@ -319,6 +319,7 @@ CREATE TABLE `sys_config` (
 -- 系统配置
 INSERT INTO sys_config (config_key, config_value, description) VALUES
 ('ai_chat_system_prompt', '你是一位专业的健康顾问，请用亲切、易懂的语言回答用户的健康问题。', 'AI 对话系统提示词'),
+('assessment_ai_prompt', '你是一位专业的健康顾问，请根据用户的健康问卷答案进行评分。分数越高表示健康状况越好（0-100分）。请以JSON格式返回：{"score": 80, "suggestion": "健康建议"}', '健康评测AI提示词'),
 ('register_bonus_points', '100', '注册赠送积分'),
 ('checkin_bonus_points', '50', '活动签到赠送积分'),
 ('health_assessment_min_score', '60', '健康评测及格分数线'),

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.UserPointRecordMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_point_record (user_id, type, amount, balance, reason, create_time)
+        VALUES (#{userId}, #{type}, #{amount}, #{balance}, #{reason}, NOW())
+    </insert>
+
+    <select id="listByUserId" resultType="com.wmm.eldercare.core.pojo.UserPointRecord">
+        SELECT id, user_id, type, amount, balance, reason, create_time
+        FROM user_point_record
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM user_point_record WHERE user_id = #{userId} AND deleted = 0
+    </select>
+
+    <select id="findExpiredRecords" resultType="com.wmm.eldercare.core.pojo.UserPointRecord">
+        SELECT id, user_id, amount FROM user_point_record
+        WHERE create_time &lt; #{expireTime} AND amount &gt; 0 AND deleted = 0
+        ORDER BY user_id, create_time
+    </select>
+
+</mapper>

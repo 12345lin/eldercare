@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.AssessmentResultMapper">
+
+    <!-- 插入评测结果 -->
+    <insert id="insert" parameterType="AssessmentResult" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO assessment_result (user_id, questionnaire_id, answers, ai_score, ai_suggestion,
+                                       create_time, update_time, deleted)
+        VALUES (#{userId}, #{questionnaireId}, #{answers}, #{aiScore}, #{aiSuggestion},
+                #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 根据 ID 查询评测结果 -->
+    <select id="findById" resultType="com.wmm.eldercare.core.pojo.AssessmentResult">
+        SELECT id, user_id, questionnaire_id, answers, ai_score, ai_suggestion,
+               create_time, update_time
+        FROM assessment_result
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <!-- 查询某用户的所有评测记录（按创建时间倒序） -->
+    <select id="findByUserId" resultType="com.wmm.eldercare.core.pojo.AssessmentResult">
+        SELECT id, user_id, questionnaire_id, answers, ai_score, ai_suggestion,
+               create_time, update_time
+        FROM assessment_result
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 逻辑删除评测结果（防越权：只能删自己的） -->
+    <update id="deleteById">
+        UPDATE assessment_result SET deleted = 1
+        WHERE id = #{id} AND user_id = #{userId} AND deleted = 0
+    </update>
+
+</mapper>

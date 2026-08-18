@@ -25,5 +25,9 @@ public interface UserMapper {
     // 登录专用：查询用户时带上密码字段（用于密码校验）
     User findByPhoneWithPassword(@Param("phone") String phone);
 
+    int updatePoints(@Param("userId") Long userId, @Param("points") Integer points);
 
+    int deductPoints(@Param("userId") Long userId, @Param("points") Integer points);
+
+    int selectPoints(@Param("userId") Long userId);
 }

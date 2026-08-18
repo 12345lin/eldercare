@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.QuestionnaireMapper">
+
+    <!-- 查询所有已发布的问卷（按创建时间倒序） -->
+    <select id="listPublished" resultType="com.wmm.eldercare.core.pojo.Questionnaire">
+        SELECT id, title, description, status, create_time, update_time
+        FROM questionnaire
+        WHERE deleted = 0 AND status = 'PUBLISHED'
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据 ID 查询问卷详情 -->
+    <select id="findById" resultType="com.wmm.eldercare.core.pojo.Questionnaire">
+        SELECT id, title, description, status, create_time, update_time
+        FROM questionnaire
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <!-- 插入问卷 -->
+    <insert id="insert" parameterType="Questionnaire" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO questionnaire (title, description, status, create_time, update_time, deleted)
+        VALUES (#{title}, #{description}, #{status}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 更新问卷状态 -->
+    <update id="updateStatus">
+        UPDATE questionnaire
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 逻辑删除问卷 -->
+    <update id="deleteById">
+        UPDATE questionnaire SET deleted = 1
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+</mapper>

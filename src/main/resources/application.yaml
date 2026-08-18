@@ -31,6 +31,8 @@ spring:
 
   # ==================== Spring AI 配置（使用 Agnes） ====================
   ai:
+    model:
+      chat: openai                                    # Spring AI 2.0 必须显式声明 chat 模型提供方，否则 ChatModel/ChatClient Bean 不创建
     openai:
       api-key: sk-qJ1cVyTkwWwQzmGNyT805oYeaUwZXDHbqzyLuXSYi2Uw5u7o
       base-url: https://apihub.agnes-ai.com/v1   # Agnes API 地址

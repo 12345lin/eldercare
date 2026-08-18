@@ -79,6 +79,7 @@ public class AuthController {
         //3. 校验验证码
         String smsCode = registerDTO.getSmsCode();
         SmsCode smsCodeEntity = smsCodeMapper.findByPhone(phone);
+        log.info("注册验证码校验: phone={}, 前端传的是[{}], 数据库查得[{}]", phone, smsCode, smsCodeEntity != null ? smsCodeEntity.getCode() : "null");
         //3.1 没发过验证码 → 直接拒绝（防止空指针）
         if (smsCodeEntity == null) {
             throw new BusinessException(400, "请先获取验证码");

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.AiConversationMessageMapper">
+
+    <!-- 插入消息 -->
+    <insert id="insert" parameterType="AiConversationMessage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_conversation_message (session_id, user_id, role, message, create_time, update_time, deleted)
+        VALUES (#{sessionId}, #{userId}, #{role}, #{message}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 根据会话 ID 查询所有消息（按创建时间升序） -->
+    <select id="findBySessionId" resultType="com.wmm.eldercare.core.pojo.AiConversationMessage">
+        SELECT id, session_id, user_id, role, message, create_time, update_time
+        FROM ai_conversation_message
+        WHERE session_id = #{sessionId} AND deleted = 0
+        ORDER BY create_time ASC
+    </select>
+
+    <!-- 根据会话 ID 逻辑删除所有消息 -->
+    <update id="deleteBySessionId">
+        UPDATE ai_conversation_message SET deleted = 1
+        WHERE session_id = #{sessionId} AND deleted = 0
+    </update>
+
+</mapper>
