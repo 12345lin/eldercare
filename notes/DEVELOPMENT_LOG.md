@@ -360,6 +360,64 @@ eldercare/
 前端:两个项目(eldercare-member / eldercare-admin)还没开始
 ```
 
+## 2026-08-18 晚间补充：站内消息 + 个人中心 + 管理端消息
+
+### 完成内容
+
+**会员端 - 站内消息模块** ✅
+- Mapper/XML：insert / findByUserId / findByIdAndUserId(防越权) / countUnread / markRead / markAllRead / deleteById
+- VO：MessageListVO / MessageDetailVO；Controller：/api/messages 6 个接口
+- 宝宝写的 ServiceImpl 有 3 处参数顺序反了 + getDetail 判空缺失，已修正
+- 优化：详情接口返回已读后状态（isRead=1）
+
+**会员端 - 个人中心模块** ✅
+- Mapper：UserMapper.findByIdWithPassword（改密码校验旧密码用）+ 4 个表 countByUserId 统计
+- VO/DTO：ProfileVO / ProfileUpdateDTO / ChangePasswordDTO / ProfileStatsVO
+- 宝宝写 Impl + Controller，4 接口全部测通（含改密码正流程）
+
+**管理端 - Message 消息管理** ✅（第 1 个管理端模块）
+- Mapper：findAll(JOIN user 显示手机号) / findById / deleteByIdAdmin
+- Service：MessageAdminService（宝宝写 Impl，非空校验已加）
+- Controller：MessageAdminController /api/admin/messages 3 接口
+
+### 新增踩坑
+
+**坑 7:ServiceImpl 注入自己的接口（循环依赖）**
+- 现象：ProfileServiceImpl 里 `private final ProfileService profileService` 然后转调自己
+- 原因：ServiceImpl 应该注入 Mapper 写业务逻辑，不是注入自己的接口
+- 教训：实现类 = 注入数据层（Mapper）+ 自己写逻辑
+
+**坑 8:改密码必须用带密码的查询方法**
+- findUserById 故意不查 password 字段（防泄露），拿到的是 null
+- 改密码校验旧密码必须用 findByIdWithPassword / findByPhoneWithPassword
+
+**坑 9:updateUser 动态 SQL 传 null 不会置空字段**
+- `<if test="user.gender != null">` 传 null 直接跳过，无法把字段改回 null
+- 测试还原资料时用 SQL 直接 UPDATE 解决
+
+**坑 10:curl 中文 body 500 再次命中**
+- git-bash 下 curl -d 带中文变 GBK，服务器解析失败 500
+- 验证 400 校验逻辑时用纯英文 body，成功通过
+
+### 项目进度速览（更新）
+
+```
+会员端 9 模块全部完成 ✅
+  认证 → 健康记录 → 积分 → 健康评测 → AI对话 → 体检预约 → 社区活动 → 站内消息 → 个人中心
+管理端：Message ✅ → 剩 Config/User/Activity/Assessment/Appointment/Dashboard
+待办：管理端角色权限拦截（最后统一做）+ 前端两个项目
+```
+
+### 明日计划
+
+| 任务 | 优先级 | 说明 |
+|------|--------|------|
+| 管理端 Config | ⭐⭐⭐ | 系统配置 CRUD（sys_config 表）|
+| 管理端 User | ⭐⭐⭐ | 用户管理（列表/禁用/积分调整）|
+| 管理端 Activity/Assessment/Appointment | ⭐⭐ | 活动管理/评测管理/预约管理 |
+| 管理端 Dashboard | ⭐⭐ | 聚合统计仪表盘（压轴）|
+| 权限拦截 + 前端 | ⭐⭐ | 最后统一做 |
+
 ---
 
 **日志持续更新中...**

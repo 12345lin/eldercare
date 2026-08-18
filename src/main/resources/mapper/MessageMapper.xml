@@ -53,4 +53,30 @@
         WHERE id = #{id} AND user_id = #{userId} AND deleted = 0
     </update>
 
+<!-- 管理端分页查询消息列表（userId 为空查全部；JOIN user 显示手机号） -->
+    <select id="findAll" resultType="com.wmm.eldercare.core.vo.MessageAdminListVO">
+        SELECT m.id, m.user_id AS userId, u.phone, m.title, m.type, m.is_read AS isRead, m.create_time AS createTime
+        FROM message m
+        LEFT JOIN user u ON m.user_id = u.id
+        WHERE m.deleted = 0
+        <if test="userId != null">
+            AND m.user_id = #{userId}
+        </if>
+        ORDER BY m.create_time DESC
+    </select>
+
+    <!-- 管理端根据 ID 查询消息（无归属校验） -->
+    <select id="findById" resultType="com.wmm.eldercare.core.pojo.Message">
+        SELECT id, user_id, title, content, type, is_read, create_time, update_time
+        FROM message
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <!-- 管理端逻辑删除消息（无归属校验） -->
+    <update id="deleteByIdAdmin">
+        UPDATE message
+        SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
 </mapper>

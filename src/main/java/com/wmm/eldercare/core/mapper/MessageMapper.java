@@ -1,6 +1,7 @@
 package com.wmm.eldercare.core.mapper;
 
 import com.wmm.eldercare.core.pojo.Message;
+import com.wmm.eldercare.core.vo.MessageAdminListVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -16,6 +17,21 @@ public interface MessageMapper {
      * 插入消息（管理端推送）
      */
     int insert(Message message);
+
+    /**
+     * 管理端分页查询消息列表（userId 为空查全部，非空按用户筛选；JOIN user 显示手机号）
+     */
+    List<MessageAdminListVO> findAll(@Param("userId") Long userId);
+
+    /**
+     * 管理端根据 ID 查询消息（无归属校验）
+     */
+    Message findById(@Param("id") Long id);
+
+    /**
+     * 管理端逻辑删除消息（无归属校验）
+     */
+    int deleteByIdAdmin(@Param("id") Long id);
 
     /**
      * 分页查询某用户的消息列表（按创建时间倒序）
