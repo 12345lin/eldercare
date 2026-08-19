@@ -33,4 +33,14 @@ public interface UserMapper {
     int deductPoints(@Param("userId") Long userId, @Param("points") Integer points);
 
     int selectPoints(@Param("userId") Long userId);
+
+    /**
+     * 管理端分页查询用户列表（keyword 空查全部，非空按手机号/姓名模糊搜索；不查密码）
+     */
+    List<User> findAll(@Param("keyword") String keyword);
+
+    /**
+     * 管理端启用/禁用用户（更新 status 字段）
+     */
+    int updateStatus(@Param("id") Long id, @Param("status") String status);
 }

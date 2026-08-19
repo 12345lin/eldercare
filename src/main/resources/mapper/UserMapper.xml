@@ -80,4 +80,25 @@
                avatar, emergency_contact, member_level, points, status,
                role, create_time, update_time FROM user WHERE id = #{id} AND deleted = 0
     </select>
+<!-- 管理端分页查询用户列表（keyword 空查全部，非空按手机号/姓名模糊搜索；不查密码） -->
+    <select id="findAll" resultType="com.wmm.eldercare.core.pojo.User">
+        SELECT id, phone, real_name, gender, birth_date, height,
+               avatar, emergency_contact, member_level, points, status,
+               role, create_time, update_time
+        FROM user
+        WHERE deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (phone LIKE CONCAT('%', #{keyword}, '%')
+                 OR real_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 管理端启用/禁用用户（更新 status 字段） -->
+    <update id="updateStatus">
+        UPDATE user
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
 </mapper>
