@@ -40,4 +40,72 @@
           AND current_participants > 0
     </update>
 
+<!-- 管理端新增活动 -->
+    <insert id="insert" parameterType="CommunityActivity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO community_activity (title, cover_url, content, registration_start, registration_end,
+                                        activity_start, activity_end, max_participants, current_participants,
+                                        status, create_time, update_time, deleted)
+        VALUES (#{title}, #{coverUrl}, #{content}, #{registrationStart}, #{registrationEnd},
+                #{activityStart}, #{activityEnd}, #{maxParticipants}, #{currentParticipants},
+                #{status}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 管理端分页查询活动列表（keyword 标题模糊搜索，status 状态筛选，均可空） -->
+    <select id="findAll" resultType="com.wmm.eldercare.core.pojo.CommunityActivity">
+        SELECT id, title, cover_url, content, registration_start, registration_end,
+               activity_start, activity_end, max_participants, current_participants,
+               status, create_time, update_time
+        FROM community_activity
+        WHERE deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 管理端修改活动（动态 SQL，只更新有值的字段） -->
+    <update id="update">
+        UPDATE community_activity
+        <set>
+            <if test="activity.title != null">title = #{activity.title},</if>
+            <if test="activity.coverUrl != null">cover_url = #{activity.coverUrl},</if>
+            <if test="activity.content != null">content = #{activity.content},</if>
+            <if test="activity.registrationStart != null">registration_start = #{activity.registrationStart},</if>
+            <if test="activity.registrationEnd != null">registration_end = #{activity.registrationEnd},</if>
+            <if test="activity.activityStart != null">activity_start = #{activity.activityStart},</if>
+            <if test="activity.activityEnd != null">activity_end = #{activity.activityEnd},</if>
+            <if test="activity.maxParticipants != null">max_participants = #{activity.maxParticipants},</if>
+            <if test="activity.status != null">status = #{activity.status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 管理端活动状态流转 -->
+    <update id="updateStatus">
+        UPDATE community_activity
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 管理端逻辑删除活动 -->
+    <update id="deleteById">
+        UPDATE community_activity
+        SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 查询某活动报名名单（JOIN user 显示手机号/姓名） -->
+    <select id="findRegistrations" resultType="com.wmm.eldercare.core.vo.ActivityRegistrationVO">
+        SELECT r.id, r.user_id AS userId, u.phone, u.real_name AS realName,
+               r.check_in_status AS checkInStatus, r.create_time AS createTime
+        FROM activity_registration r
+        LEFT JOIN user u ON r.user_id = u.id
+        WHERE r.activity_id = #{activityId} AND r.deleted = 0
+        ORDER BY r.create_time ASC
+    </select>
+
 </mapper>

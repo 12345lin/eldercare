@@ -40,4 +40,16 @@
         SELECT COUNT(*) FROM assessment_result WHERE user_id = #{userId} AND deleted = 0
     </select>
 
+<!-- 管理端分页查询评测结果列表（JOIN user 显示手机号/姓名、JOIN 问卷显示标题） -->
+    <select id="findAllAdmin" resultType="com.wmm.eldercare.core.vo.AssessmentAdminResultVO">
+        SELECT a.id, a.user_id AS userId, u.phone, u.real_name AS realName,
+               a.questionnaire_id AS questionnaireId, q.title AS questionnaireTitle,
+               a.ai_score AS aiScore, a.ai_suggestion AS aiSuggestion, a.create_time AS createTime
+        FROM assessment_result a
+        LEFT JOIN user u ON a.user_id = u.id
+        LEFT JOIN questionnaire q ON a.questionnaire_id = q.id
+        WHERE a.deleted = 0
+        ORDER BY a.create_time DESC
+    </select>
+
 </mapper>

@@ -33,4 +33,14 @@ public interface QuestionnaireMapper {
      * 逻辑删除问卷
      */
     int deleteById(@Param("id") Long id);
+
+    /**
+     * 管理端分页查询问卷列表（keyword 标题搜索，status 状态筛选，均可空）
+     */
+    List<Questionnaire> findAll(@Param("keyword") String keyword, @Param("status") String status);
+
+    /**
+     * 管理端修改问卷（动态 SQL）
+     */
+    int update(@Param("id") Long id, @Param("questionnaire") Questionnaire questionnaire);
 }

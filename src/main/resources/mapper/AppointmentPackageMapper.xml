@@ -19,4 +19,41 @@
         WHERE id = #{id} AND deleted = 0
     </select>
 
+    <!-- 管理端分页查询所有套餐 -->
+    <select id="findAll" resultType="com.wmm.eldercare.core.pojo.AppointmentPackage">
+        SELECT id, name, cover_url, description, price, suitable_people, items, status, create_time, update_time
+        FROM appointment_package
+        WHERE deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 管理端新增套餐 -->
+    <insert id="insert" parameterType="AppointmentPackage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO appointment_package (name, cover_url, description, price, suitable_people, items, status, create_time, update_time, deleted)
+        VALUES (#{name}, #{coverUrl}, #{description}, #{price}, #{suitablePeople}, #{items}, #{status}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 管理端修改套餐（动态 SQL） -->
+    <update id="update">
+        UPDATE appointment_package
+        <set>
+            <if test="appointmentPackage.name != null">name = #{appointmentPackage.name},</if>
+            <if test="appointmentPackage.coverUrl != null">cover_url = #{appointmentPackage.coverUrl},</if>
+            <if test="appointmentPackage.description != null">description = #{appointmentPackage.description},</if>
+            <if test="appointmentPackage.price != null">price = #{appointmentPackage.price},</if>
+            <if test="appointmentPackage.suitablePeople != null">suitable_people = #{appointmentPackage.suitablePeople},</if>
+            <if test="appointmentPackage.items != null">items = #{appointmentPackage.items},</if>
+            <if test="appointmentPackage.status != null">status = #{appointmentPackage.status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 管理端逻辑删除套餐 -->
+    <update id="deleteById">
+        UPDATE appointment_package
+        SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
 </mapper>

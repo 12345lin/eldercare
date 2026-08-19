@@ -17,9 +17,29 @@ public interface AppointmentSlotMapper {
                                                   @Param("date") LocalDate date);
 
     /**
+     * 管理端按套餐 ID 查询所有时段
+     */
+    List<AppointmentSlot> findByPackageId(@Param("packageId") Long packageId);
+
+    /**
      * 根据 ID 查询时段
      */
     AppointmentSlot findById(@Param("id") Long id);
+
+    /**
+     * 管理端新增时段
+     */
+    int insert(AppointmentSlot slot);
+
+    /**
+     * 管理端修改时段（动态 SQL）
+     */
+    int update(@Param("id") Long id, @Param("slot") AppointmentSlot slot);
+
+    /**
+     * 管理端逻辑删除时段
+     */
+    int deleteById(@Param("id") Long id);
 
     /**
      * 增加已预约人数（防并发）

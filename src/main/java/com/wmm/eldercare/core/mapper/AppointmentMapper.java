@@ -1,6 +1,7 @@
 package com.wmm.eldercare.core.mapper;
 
 import com.wmm.eldercare.core.pojo.Appointment;
+import com.wmm.eldercare.core.vo.AppointmentAdminListVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -32,7 +33,17 @@ public interface AppointmentMapper {
     /**
      * 更新预约状态
      */
-    int updateStatus(@Param("id") Long id, 
-                     @Param("userId") Long userId, 
+    int updateStatus(@Param("id") Long id,
+                     @Param("userId") Long userId,
                      @Param("status") String status);
+
+    /**
+     * 管理端分页查询预约列表（status 状态筛选，可空；JOIN user/package/slot 显示详情）
+     */
+    List<AppointmentAdminListVO> findAll(@Param("status") String status);
+
+    /**
+     * 管理端更新预约状态（无 userId 校验）
+     */
+    int updateStatusAdmin(@Param("id") Long id, @Param("status") String status);
 }

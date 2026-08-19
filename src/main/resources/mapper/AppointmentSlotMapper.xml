@@ -33,4 +33,38 @@
         WHERE id = #{id} AND current_count > 0 AND deleted = 0
     </update>
 
+    <!-- 管理端按套餐 ID 查询所有时段 -->
+    <select id="findByPackageId" resultType="com.wmm.eldercare.core.pojo.AppointmentSlot">
+        SELECT id, package_id, appoint_date, time_range, max_count, current_count, status, create_time, update_time
+        FROM appointment_slot
+        WHERE package_id = #{packageId} AND deleted = 0
+        ORDER BY appoint_date ASC, time_range ASC
+    </select>
+
+    <!-- 管理端新增时段 -->
+    <insert id="insert" parameterType="AppointmentSlot" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO appointment_slot (package_id, appoint_date, time_range, max_count, current_count, status, create_time, update_time, deleted)
+        VALUES (#{packageId}, #{appointDate}, #{timeRange}, #{maxCount}, #{currentCount}, #{status}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 管理端修改时段（动态 SQL） -->
+    <update id="update">
+        UPDATE appointment_slot
+        <set>
+            <if test="slot.appointDate != null">appoint_date = #{slot.appointDate},</if>
+            <if test="slot.timeRange != null">time_range = #{slot.timeRange},</if>
+            <if test="slot.maxCount != null">max_count = #{slot.maxCount},</if>
+            <if test="slot.status != null">status = #{slot.status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 管理端逻辑删除时段 -->
+    <update id="deleteById">
+        UPDATE appointment_slot
+        SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
 </mapper>

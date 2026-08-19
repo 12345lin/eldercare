@@ -38,4 +38,29 @@
         WHERE id = #{id} AND deleted = 0
     </update>
 
+<!-- 管理端分页查询问卷列表（keyword 标题搜索，status 状态筛选，均可空） -->
+    <select id="findAll" resultType="com.wmm.eldercare.core.pojo.Questionnaire">
+        SELECT id, title, description, status, create_time, update_time
+        FROM questionnaire
+        WHERE deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 管理端修改问卷（动态 SQL） -->
+    <update id="update">
+        UPDATE questionnaire
+        <set>
+            <if test="questionnaire.title != null">title = #{questionnaire.title},</if>
+            <if test="questionnaire.description != null">description = #{questionnaire.description},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
 </mapper>
