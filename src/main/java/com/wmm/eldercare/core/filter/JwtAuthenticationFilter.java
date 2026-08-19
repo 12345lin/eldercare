@@ -31,9 +31,24 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
             return false;
         }
         Claims claims = jwtUtil.parseToken(token);
+        
+        // 提取用户信息
+        String role = claims.get("role", String.class);
         request.setAttribute("userId", Long.valueOf(claims.getSubject()));
         request.setAttribute("phone", claims.get("phone", String.class));
-        request.setAttribute("role", claims.get("role", String.class));
+        request.setAttribute("role", role);
+        
+        // 角色权限校验：admin 路径必须 ADMIN 角色
+        String requestURI = request.getRequestURI();
+        if (requestURI != null && requestURI.startsWith("/api/admin/")) {
+            if (!"ADMIN".equals(role)) {
+                response.setStatus(403);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":403,\"message\":\"无权访问管理端接口\",\"data\":null}");
+                return false;
+            }
+        }
+        
         return true;
     }
 }
