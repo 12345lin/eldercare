@@ -37,6 +37,16 @@
 待办：权限拦截(ADMIN角色校验) + 前端两个项目
 ```
 
----
+## 权限拦截模块（2026-08-19 晚间）
 
-**日志持续更新中...**
+**完成内容：**
+- ✅ `JwtAuthenticationFilter.java` 加角色校验（/api/admin/** 必须 ADMIN）
+- ✅ user4 角色从 MEMBER → ADMIN（测试账号）
+- ✅ 测试通过：MEMBER token 访问 admin 接口返回 403，ADMIN 正常访问
+
+**测试记录：**
+```
+ADMIN token → /api/admin/dashboard = 200 ✅
+MEMBER token → /api/admin/dashboard = 403 ✅  
+MEMBER token → /api/activities = 200 ✅
+```
