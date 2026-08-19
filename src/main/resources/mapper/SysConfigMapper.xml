@@ -12,4 +12,47 @@
         LIMIT 1
     </select>
 
+<!-- 新增配置 -->
+    <insert id="insert" parameterType="SysConfig" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_config (config_key, config_value, description, create_time, update_time, deleted)
+        VALUES (#{configKey}, #{configValue}, #{description}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <!-- 根据 ID 查询配置 -->
+    <select id="findById" resultType="com.wmm.eldercare.core.pojo.SysConfig">
+        SELECT id, config_key, config_value, description, create_time, update_time
+        FROM sys_config
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <!-- 分页查询配置列表（keyword 为空查全部，非空按 config_key/description 模糊搜索） -->
+    <select id="findAll" resultType="com.wmm.eldercare.core.pojo.SysConfig">
+        SELECT id, config_key, config_value, description, create_time, update_time
+        FROM sys_config
+        WHERE deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (config_key LIKE CONCAT('%', #{keyword}, '%')
+                 OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY id ASC
+    </select>
+
+    <!-- 修改配置（动态 SQL，只更新有值的字段） -->
+    <update id="update">
+        UPDATE sys_config
+        <set>
+            <if test="config.configValue != null">config_value = #{config.configValue},</if>
+            <if test="config.description != null">description = #{config.description},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 逻辑删除配置 -->
+    <update id="deleteById">
+        UPDATE sys_config
+        SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
 </mapper>
