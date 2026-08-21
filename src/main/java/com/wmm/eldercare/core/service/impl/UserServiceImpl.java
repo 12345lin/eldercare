@@ -6,8 +6,10 @@ import com.wmm.eldercare.core.common.BusinessException;
 import com.wmm.eldercare.core.common.PageResult;
 import com.wmm.eldercare.core.mapper.UserMapper;
 import com.wmm.eldercare.core.mapper.UserPointRecordMapper;
+import com.wmm.eldercare.core.mapper.PointTransactionMapper;
 import com.wmm.eldercare.core.pojo.User;
 import com.wmm.eldercare.core.pojo.UserPointRecord;
+import com.wmm.eldercare.core.pojo.PointTransaction;
 import com.wmm.eldercare.core.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     private final UserPointRecordMapper userPointRecordMapper;
+
+    private final PointTransactionMapper pointTransactionMapper;
 
     @Override
     @Transactional
@@ -178,7 +182,7 @@ public class UserServiceImpl implements UserService {
         }
         //3.查询更新后的用户积分
         int balance = userMapper.selectPoints(userId);
-        //4.更新用户积分记录
+        //4.更新用户积分记录（保持原有 user_point_record 兼容）
         UserPointRecord userPointRecord = new UserPointRecord();
         userPointRecord.setUserId(userId);
         userPointRecord.setType(type);
@@ -187,6 +191,19 @@ public class UserServiceImpl implements UserService {
         userPointRecord.setBalance(balance);
         userPointRecord.setCreateTime(LocalDateTime.now());
         userPointRecordMapper.insert(userPointRecord);
+        //5.写入 point_transaction 获得流水（带 expire_time = 1年后，remain=amount，支持 FIFO 消费与过期）
+        PointTransaction tx = new PointTransaction();
+        tx.setUserId(userId);
+        tx.setType(type);
+        tx.setChangeAmount(amount);
+        tx.setBalanceAfter(balance);
+        tx.setRemainAmount(amount);
+        tx.setExpireTime(LocalDateTime.now().plusYears(1));
+        tx.setDescription(reason);
+        tx.setCreateTime(LocalDateTime.now());
+        tx.setUpdateTime(LocalDateTime.now());
+        tx.setDeleted(0);
+        pointTransactionMapper.insert(tx);
         return balance;
     }
 
@@ -220,6 +237,28 @@ public class UserServiceImpl implements UserService {
         record.setReason(reason);
         record.setCreateTime(LocalDateTime.now());
         userPointRecordMapper.insert(record);
+        // ===== FIFO 消费：按最早获得批次扣减 remain_amount =====
+        int deductRemaining = amount;
+        List<PointTransaction> batches = pointTransactionMapper.findAvailableBatches(userId);
+        for (PointTransaction batch : batches) {
+            if (deductRemaining <= 0) break;
+            int fromBatch = Math.min(deductRemaining, batch.getRemainAmount());
+            pointTransactionMapper.reduceRemain(batch.getId(), fromBatch);
+            // 生成消费流水
+            PointTransaction consumeTx = new PointTransaction();
+            consumeTx.setUserId(userId);
+            consumeTx.setType(type);
+            consumeTx.setChangeAmount(-fromBatch);
+            consumeTx.setBalanceAfter(balance);
+            consumeTx.setRemainAmount(0);
+            consumeTx.setBatchTxId(batch.getId());
+            consumeTx.setDescription(reason);
+            consumeTx.setCreateTime(LocalDateTime.now());
+            consumeTx.setUpdateTime(LocalDateTime.now());
+            consumeTx.setDeleted(0);
+            pointTransactionMapper.insert(consumeTx);
+            deductRemaining -= fromBatch;
+        }
         return balance;
     }
 

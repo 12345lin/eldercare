@@ -64,4 +64,12 @@ public interface UserAdminService {
      * @param ids 用户 ID 列表
      */
     void batchDeleteUsers(List<Long> ids);
+
+    /**
+     * 查询会员详情（用户 + 最近健康记录 + 最近预约 + 最近积分流水）
+     *
+     * @param id 用户 ID
+     * @return 会员详情
+     */
+    com.wmm.eldercare.core.vo.AdminMemberDetailVO getMemberDetail(Long id);
 }

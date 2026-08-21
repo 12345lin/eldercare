@@ -98,6 +98,58 @@ public class AssessmentAdminController {
     }
 
     /**
+     * 查询某问卷下的所有题目
+     * GET /api/admin/assessments/{id}/questions
+     */
+    @GetMapping("/{id}/questions")
+    public Result<java.util.List<com.wmm.eldercare.core.pojo.Question>> listQuestions(
+            @PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("管理端查询题目: userId={}, questionnaireId={}", userId, id);
+        return Result.success(assessmentAdminService.listQuestions(id));
+    }
+
+    /**
+     * 新增题目
+     * POST /api/admin/assessments/{id}/questions
+     */
+    @PostMapping("/{id}/questions")
+    public Result<Void> addQuestion(@PathVariable Long id,
+                                    @RequestBody com.wmm.eldercare.core.pojo.Question question,
+                                    HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("管理端新增题目: userId={}, questionnaireId={}, content={}", userId, id, question.getContent());
+        assessmentAdminService.addQuestion(id, question);
+        return Result.success();
+    }
+
+    /**
+     * 修改题目
+     * PUT /api/admin/assessments/questions/{questionId}
+     */
+    @PutMapping("/questions/{questionId}")
+    public Result<Void> updateQuestion(@PathVariable Long questionId,
+                                       @RequestBody com.wmm.eldercare.core.pojo.Question question,
+                                       HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("管理端修改题目: userId={}, questionId={}", userId, questionId);
+        assessmentAdminService.updateQuestion(questionId, question);
+        return Result.success();
+    }
+
+    /**
+     * 删除题目
+     * DELETE /api/admin/assessments/questions/{questionId}
+     */
+    @DeleteMapping("/questions/{questionId}")
+    public Result<Void> deleteQuestion(@PathVariable Long questionId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("管理端删除题目: userId={}, questionId={}", userId, questionId);
+        assessmentAdminService.deleteQuestion(questionId);
+        return Result.success();
+    }
+
+    /**
      * 分页查询评测结果列表
      * GET /api/admin/assessments/results?pageNum=1&pageSize=10
      */

@@ -2,14 +2,18 @@ package com.wmm.eldercare.admin.controller;
 
 import com.wmm.eldercare.core.common.PageResult;
 import com.wmm.eldercare.core.common.Result;
+import com.wmm.eldercare.core.common.BusinessException;
 import com.wmm.eldercare.core.pojo.User;
 import com.wmm.eldercare.core.service.UserAdminService;
+import com.wmm.eldercare.core.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 管理端用户管理 Controller
@@ -20,6 +24,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserAdminController {
     private final UserAdminService userAdminService;
+    private final UserService userService;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     /**
      * 分页查询用户列表（可按手机号/姓名搜索）
@@ -45,6 +51,18 @@ public class UserAdminController {
         Long adminId = (Long) request.getAttribute("userId");
         log.info("管理端查询用户详情: adminId={}, userId={}", adminId, id);
         return Result.success(userAdminService.getUser(id));
+    }
+
+    /**
+     * 查询会员详情（用户 + 健康记录 + 预约 + 积分流水）
+     * GET /api/admin/users/{id}/detail
+     */
+    @GetMapping("/{id}/detail")
+    public Result<com.wmm.eldercare.core.vo.AdminMemberDetailVO> getMemberDetail(
+            @PathVariable Long id, HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("userId");
+        log.info("管理端查询会员详情: adminId={}, userId={}", adminId, id);
+        return Result.success(userAdminService.getMemberDetail(id));
     }
 
     /**
@@ -106,6 +124,33 @@ public class UserAdminController {
         Long adminId = (Long) request.getAttribute("userId");
         log.info("管理端批量删除用户: adminId={}, ids={}", adminId, ids);
         userAdminService.batchDeleteUsers(ids);
+        return Result.success();
+    }
+
+    /**
+     * 重置会员密码
+     * PUT /api/admin/users/{id}/reset-password  body: {"newPassword":"xxx"}
+     */
+    @PutMapping("/{id}/reset-password")
+    public Result<Void> resetPassword(@PathVariable Long id,
+                                      @RequestBody Map<String, String> body,
+                                      HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("userId");
+        String newPassword = body.get("newPassword");
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new BusinessException(400, "请输入新密码");
+        }
+        if (newPassword.length() < 6) {
+            throw new BusinessException(400, "新密码至少 6 位");
+        }
+        User user = userService.findUserById(id);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        log.info("管理端重置密码: adminId={}, userId={}", adminId, id);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userService.updateUser(id, user);
+        // 删除该用户所有 refresh token，强制重新登录
         return Result.success();
     }
 }

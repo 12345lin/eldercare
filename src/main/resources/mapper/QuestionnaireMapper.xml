@@ -6,7 +6,7 @@
 
     <!-- 查询所有已发布的问卷（按创建时间倒序） -->
     <select id="listPublished" resultType="com.wmm.eldercare.core.pojo.Questionnaire">
-        SELECT id, title, description, status, create_time, update_time
+        SELECT id, title, description, status, total_score, pass_score, grade_rules, create_time, update_time
         FROM questionnaire
         WHERE deleted = 0 AND status = 'PUBLISHED'
         ORDER BY create_time DESC
@@ -14,15 +14,15 @@
 
     <!-- 根据 ID 查询问卷详情 -->
     <select id="findById" resultType="com.wmm.eldercare.core.pojo.Questionnaire">
-        SELECT id, title, description, status, create_time, update_time
+        SELECT id, title, description, status, total_score, pass_score, grade_rules, create_time, update_time
         FROM questionnaire
         WHERE id = #{id} AND deleted = 0
     </select>
 
     <!-- 插入问卷 -->
     <insert id="insert" parameterType="Questionnaire" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO questionnaire (title, description, status, create_time, update_time, deleted)
-        VALUES (#{title}, #{description}, #{status}, #{createTime}, #{updateTime}, #{deleted})
+        INSERT INTO questionnaire (title, description, status, total_score, pass_score, grade_rules, create_time, update_time, deleted)
+        VALUES (#{title}, #{description}, #{status}, #{totalScore}, #{passScore}, #{gradeRules}, #{createTime}, #{updateTime}, #{deleted})
     </insert>
 
     <!-- 更新问卷状态 -->
@@ -40,7 +40,7 @@
 
 <!-- 管理端分页查询问卷列表（keyword 标题搜索，status 状态筛选，均可空） -->
     <select id="findAll" resultType="com.wmm.eldercare.core.pojo.Questionnaire">
-        SELECT id, title, description, status, create_time, update_time
+        SELECT id, title, description, status, total_score, pass_score, grade_rules, create_time, update_time
         FROM questionnaire
         WHERE deleted = 0
         <if test="keyword != null and keyword != ''">
@@ -49,7 +49,7 @@
         <if test="status != null and status != ''">
             AND status = #{status}
         </if>
-        ORDER BY create_time DESC
+        ORDER BY id ASC
     </select>
 
     <!-- 管理端修改问卷（动态 SQL） -->
@@ -58,6 +58,9 @@
         <set>
             <if test="questionnaire.title != null">title = #{questionnaire.title},</if>
             <if test="questionnaire.description != null">description = #{questionnaire.description},</if>
+            <if test="questionnaire.totalScore != null">total_score = #{questionnaire.totalScore},</if>
+            <if test="questionnaire.passScore != null">pass_score = #{questionnaire.passScore},</if>
+            <if test="questionnaire.gradeRules != null">grade_rules = #{questionnaire.gradeRules},</if>
             update_time = NOW()
         </set>
         WHERE id = #{id} AND deleted = 0

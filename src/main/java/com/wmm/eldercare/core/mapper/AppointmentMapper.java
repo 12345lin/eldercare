@@ -46,4 +46,12 @@ public interface AppointmentMapper {
      * 管理端更新预约状态（无 userId 校验）
      */
     int updateStatusAdmin(@Param("id") Long id, @Param("status") String status);
+
+    /**
+     * 关联体检报告（更新 report_url、原始文件名、上传时间、上传管理员）
+     */
+    int updateReport(@Param("id") Long id,
+                     @Param("reportUrl") String reportUrl,
+                     @Param("originalFilename") String originalFilename,
+                     @Param("uploadAdminId") Long uploadAdminId);
 }

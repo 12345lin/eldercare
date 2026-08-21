@@ -24,7 +24,7 @@
         SELECT id, name, cover_url, description, price, suitable_people, items, status, create_time, update_time
         FROM appointment_package
         WHERE deleted = 0
-        ORDER BY create_time DESC
+        ORDER BY id ASC
     </select>
 
     <!-- 管理端新增套餐 -->

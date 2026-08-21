@@ -9,11 +9,13 @@ import com.wmm.eldercare.core.mapper.HealthRecordMapper;
 import com.wmm.eldercare.core.mapper.UserMapper;
 import com.wmm.eldercare.core.pojo.HealthRecord;
 import com.wmm.eldercare.core.pojo.User;
+import com.wmm.eldercare.core.service.HealthGuardService;
 import com.wmm.eldercare.core.service.HealthRecordService;
 import com.wmm.eldercare.core.vo.HealthTrendVO;
 import com.wmm.eldercare.core.vo.IndicatorTrend;
 import com.wmm.eldercare.core.vo.MonthlyHealthStatVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,11 +26,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class HealthRecordServiceImpl implements HealthRecordService {
 
     private final HealthRecordMapper healthRecordMapper;
 
     private final UserMapper userMapper;
+
+    private final HealthGuardService healthGuardService;
 
     /**
      * 添加健康记录
@@ -62,6 +67,14 @@ public class HealthRecordServiceImpl implements HealthRecordService {
         healthRecord.setUpdateTime(LocalDateTime.now());
         healthRecord.setDeleted(0);
         healthRecordMapper.insert(healthRecord);
+
+        // 触发健康提醒（指标超标时生成个性化建议并推送站内消息）
+        try {
+            healthGuardService.checkAndNotify(userId, healthRecord);
+        } catch (Exception e) {
+            // 健康提醒失败不影响录入主流程
+            log.warn("健康提醒生成失败 userId={}: {}", userId, e.getMessage());
+        }
     }
 
     /**

@@ -34,3 +34,10 @@ build/
 
 ### Hermes 临时文件 ###
 .hermes-tmp.*
+
+### 本地测试/临时文件 ###
+*.json
+get_tokens.py
+test_all.py
+test_modules.py
+data/

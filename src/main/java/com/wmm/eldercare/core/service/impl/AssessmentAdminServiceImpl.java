@@ -5,7 +5,9 @@ import com.github.pagehelper.PageInfo;
 import com.wmm.eldercare.core.common.BusinessException;
 import com.wmm.eldercare.core.common.PageResult;
 import com.wmm.eldercare.core.mapper.AssessmentResultMapper;
+import com.wmm.eldercare.core.mapper.QuestionMapper;
 import com.wmm.eldercare.core.mapper.QuestionnaireMapper;
+import com.wmm.eldercare.core.pojo.Question;
 import com.wmm.eldercare.core.pojo.Questionnaire;
 import com.wmm.eldercare.core.service.AssessmentAdminService;
 import com.wmm.eldercare.core.vo.AssessmentAdminResultVO;
@@ -20,6 +22,7 @@ import java.util.List;
 public class AssessmentAdminServiceImpl implements AssessmentAdminService {
 
     private final QuestionnaireMapper questionnaireMapper;
+    private final QuestionMapper questionMapper;
     private final AssessmentResultMapper assessmentResultMapper;
 
     @Override
@@ -79,6 +82,48 @@ public class AssessmentAdminServiceImpl implements AssessmentAdminService {
             throw new BusinessException(404, "问卷不存在");
         }
         questionnaireMapper.deleteById(id);
+    }
+
+    @Override
+    public List<Question> listQuestions(Long questionnaireId) {
+        if (questionnaireMapper.findById(questionnaireId) == null) {
+            throw new BusinessException(404, "问卷不存在");
+        }
+        return questionMapper.findByQuestionnaireId(questionnaireId);
+    }
+
+    @Override
+    public void addQuestion(Long questionnaireId, Question question) {
+        if (questionnaireMapper.findById(questionnaireId) == null) {
+            throw new BusinessException(404, "问卷不存在");
+        }
+        if (question.getContent() == null || question.getContent().isBlank()) {
+            throw new BusinessException(400, "题目内容不能为空");
+        }
+        // 默认值：计分模式
+        if (question.getScoreMode() == null) {
+            question.setScoreMode("SCORED");
+        }
+        if (question.getMaxScore() == null) {
+            question.setMaxScore(0);
+        }
+        question.setQuestionnaireId(questionnaireId);
+        question.setCreateTime(LocalDateTime.now());
+        question.setUpdateTime(LocalDateTime.now());
+        question.setDeleted(0);
+        questionMapper.insert(question);
+    }
+
+    @Override
+    public void updateQuestion(Long id, Question question) {
+        question.setId(id);
+        question.setUpdateTime(LocalDateTime.now());
+        questionMapper.update(question);
+    }
+
+    @Override
+    public void deleteQuestion(Long id) {
+        questionMapper.deleteById(id);
     }
 
     @Override

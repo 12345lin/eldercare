@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wmm.eldercare.core.mapper.PointTransactionMapper">
+
+    <insert id="insert" parameterType="PointTransaction" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO point_transaction (user_id, type, change_amount, balance_after, remain_amount, expire_time, batch_tx_id, description, ref_id, create_time, update_time, deleted)
+        VALUES (#{userId}, #{type}, #{changeAmount}, #{balanceAfter}, #{remainAmount}, #{expireTime}, #{batchTxId}, #{description}, #{refId}, #{createTime}, #{updateTime}, #{deleted})
+    </insert>
+
+    <select id="findByUserId" resultType="com.wmm.eldercare.core.pojo.PointTransaction">
+        SELECT id, user_id, type, change_amount, balance_after, remain_amount, expire_time, batch_tx_id, description, ref_id, create_time, update_time, deleted
+        FROM point_transaction
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="findAvailableBatches" resultType="com.wmm.eldercare.core.pojo.PointTransaction">
+        SELECT id, user_id, type, change_amount, balance_after, remain_amount, expire_time, batch_tx_id, description, ref_id, create_time, update_time
+        FROM point_transaction
+        WHERE user_id = #{userId} AND deleted = 0 AND remain_amount > 0
+          AND (expire_time IS NULL OR expire_time > NOW())
+        ORDER BY create_time ASC
+    </select>
+
+    <update id="reduceRemain">
+        UPDATE point_transaction SET remain_amount = remain_amount - #{amount}, update_time = NOW()
+        WHERE id = #{id} AND remain_amount >= #{amount}
+    </update>
+
+    <update id="updateRemainAdd">
+        UPDATE point_transaction SET remain_amount = remain_amount + #{amount}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteTx">
+        UPDATE point_transaction SET deleted = 1 WHERE id = #{id}
+    </update>
+
+    <select id="findExpired" resultType="com.wmm.eldercare.core.pojo.PointTransaction">
+        SELECT id, user_id, type, change_amount, balance_after, remain_amount, expire_time, batch_tx_id, description, ref_id, create_time, update_time
+        FROM point_transaction
+        WHERE deleted = 0 AND remain_amount > 0 AND expire_time IS NOT NULL AND expire_time &lt; #{now}
+    </select>
+
+</mapper>

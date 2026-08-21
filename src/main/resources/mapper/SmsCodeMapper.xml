@@ -24,4 +24,9 @@
         UPDATE sms_code SET used = 1 WHERE id = #{id}
     </update>
 
+    <!-- 清理过期验证码（定时任务） -->
+    <delete id="deleteExpired">
+        DELETE FROM sms_code WHERE expire_time &lt; NOW()
+    </delete>
+
 </mapper>

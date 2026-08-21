@@ -40,6 +40,26 @@ public interface AssessmentAdminService {
     void deleteQuestionnaire(Long id);
 
     /**
+     * 查询某问卷下的所有题目
+     */
+    java.util.List<com.wmm.eldercare.core.pojo.Question> listQuestions(Long questionnaireId);
+
+    /**
+     * 新增题目
+     */
+    void addQuestion(Long questionnaireId, com.wmm.eldercare.core.pojo.Question question);
+
+    /**
+     * 修改题目
+     */
+    void updateQuestion(Long id, com.wmm.eldercare.core.pojo.Question question);
+
+    /**
+     * 删除题目
+     */
+    void deleteQuestion(Long id);
+
+    /**
      * 分页查询评测结果列表（含用户/问卷信息）
      */
     PageResult<AssessmentAdminResultVO> listResults(Integer pageNum, Integer pageSize);

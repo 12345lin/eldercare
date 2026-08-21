@@ -62,7 +62,7 @@
         <if test="userId != null">
             AND m.user_id = #{userId}
         </if>
-        ORDER BY m.create_time DESC
+        ORDER BY m.id ASC
     </select>
 
     <!-- 管理端根据 ID 查询消息（无归属校验） -->

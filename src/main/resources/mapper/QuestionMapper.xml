@@ -6,7 +6,7 @@
 
     <!-- 根据问卷 ID 查询所有题目（按排序号升序） -->
     <select id="findByQuestionnaireId" resultType="com.wmm.eldercare.core.pojo.Question">
-        SELECT id, questionnaire_id, content, type, options, sort_order, create_time, update_time
+        SELECT id, questionnaire_id, content, type, score_mode, max_score, options, sort_order, create_time, update_time
         FROM question
         WHERE questionnaire_id = #{questionnaireId} AND deleted = 0
         ORDER BY sort_order ASC
@@ -14,7 +14,7 @@
 
     <!-- 批量根据 ID 查询题目 -->
     <select id="findByIdIn" resultType="com.wmm.eldercare.core.pojo.Question">
-        SELECT id, questionnaire_id, content, type, options, sort_order, create_time, update_time
+        SELECT id, questionnaire_id, content, type, score_mode, max_score, options, sort_order, create_time, update_time
         FROM question
         WHERE id IN
         <foreach collection="ids" item="id" open="(" close=")" separator=",">
@@ -25,14 +25,15 @@
 
     <!-- 插入题目 -->
     <insert id="insert" parameterType="Question" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO question (questionnaire_id, content, type, options, sort_order, create_time, update_time, deleted)
-        VALUES (#{questionnaireId}, #{content}, #{type}, #{options}, #{sortOrder}, #{createTime}, #{updateTime}, #{deleted})
+        INSERT INTO question (questionnaire_id, content, type, score_mode, max_score, options, sort_order, create_time, update_time, deleted)
+        VALUES (#{questionnaireId}, #{content}, #{type}, #{scoreMode}, #{maxScore}, #{options}, #{sortOrder}, #{createTime}, #{updateTime}, #{deleted})
     </insert>
 
     <!-- 更新题目 -->
     <update id="update" parameterType="Question">
         UPDATE question
-        SET content = #{content}, type = #{type}, options = #{options}, sort_order = #{sortOrder},
+        SET content = #{content}, type = #{type}, score_mode = #{scoreMode}, max_score = #{maxScore},
+            options = #{options}, sort_order = #{sortOrder},
             update_time = NOW()
         WHERE id = #{id} AND deleted = 0
     </update>

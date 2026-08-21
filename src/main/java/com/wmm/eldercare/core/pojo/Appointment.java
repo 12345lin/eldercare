@@ -20,6 +20,9 @@ public class Appointment {
     private Long packageId;             // 套餐 ID
     private String status;              // 状态：PENDING/CONFIRMED/CANCELED/COMPLETED
     private String reportUrl;           // 体检报告 URL
+    private String originalFilename;    // 体检报告原始文件名
+    private LocalDateTime reportUploadTime; // 报告上传时间
+    private Long uploadAdminId;         // 上传管理员 ID
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Integer deleted;            // 逻辑删除：0 未删除/1 已删除

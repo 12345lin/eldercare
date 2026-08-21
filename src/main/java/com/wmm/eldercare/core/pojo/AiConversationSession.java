@@ -17,6 +17,7 @@ public class AiConversationSession {
     private Long id;                    // 会话 ID
     private Long userId;                // 用户 ID
     private String sessionName;         // 会话名称
+    private String firstMessage;        // 首条用户消息（用于列表预览）
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Integer deleted;            // 逻辑删除：0 未删除/1 已删除

@@ -91,7 +91,7 @@
             AND (phone LIKE CONCAT('%', #{keyword}, '%')
                  OR real_name LIKE CONCAT('%', #{keyword}, '%'))
         </if>
-        ORDER BY create_time DESC
+        ORDER BY id ASC
     </select>
 
     <!-- 管理端启用/禁用用户（更新 status 字段） -->

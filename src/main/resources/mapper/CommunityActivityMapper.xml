@@ -63,7 +63,7 @@
         <if test="status != null and status != ''">
             AND status = #{status}
         </if>
-        ORDER BY create_time DESC
+        ORDER BY id ASC
     </select>
 
     <!-- 管理端修改活动（动态 SQL，只更新有值的字段） -->

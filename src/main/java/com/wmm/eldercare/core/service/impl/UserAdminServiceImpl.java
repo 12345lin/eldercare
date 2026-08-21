@@ -4,10 +4,17 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.wmm.eldercare.core.common.BusinessException;
 import com.wmm.eldercare.core.common.PageResult;
+import com.wmm.eldercare.core.mapper.AppointmentMapper;
+import com.wmm.eldercare.core.mapper.HealthRecordMapper;
+import com.wmm.eldercare.core.mapper.PointTransactionMapper;
 import com.wmm.eldercare.core.mapper.UserMapper;
+import com.wmm.eldercare.core.pojo.Appointment;
+import com.wmm.eldercare.core.pojo.HealthRecord;
+import com.wmm.eldercare.core.pojo.PointTransaction;
 import com.wmm.eldercare.core.pojo.User;
 import com.wmm.eldercare.core.service.UserAdminService;
 import com.wmm.eldercare.core.service.UserService;
+import com.wmm.eldercare.core.vo.AdminMemberDetailVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +26,9 @@ public class UserAdminServiceImpl implements UserAdminService {
 
     private final UserMapper userMapper;
     private final UserService userService;
+    private final AppointmentMapper appointmentMapper;
+    private final HealthRecordMapper healthRecordMapper;
+    private final PointTransactionMapper pointTransactionMapper;
 
     @Override
     public PageResult<User> listUsers(String keyword, Integer pageNum, Integer pageSize) {
@@ -99,5 +109,43 @@ public class UserAdminServiceImpl implements UserAdminService {
             throw new BusinessException(400, "参数不能为空");
         }
         userService.batchDeleteUsers(ids);
+    }
+
+    @Override
+    public AdminMemberDetailVO getMemberDetail(Long id) {
+        User user = userService.findUserById(id);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        user.setPassword(null); // 安全：不返回密码
+
+        AdminMemberDetailVO vo = new AdminMemberDetailVO();
+        vo.setUser(user);
+
+        // 最近 5 条健康记录
+        try {
+            List<HealthRecord> healthRecords = healthRecordMapper.findByUserId(id);
+            vo.setRecentHealthRecords(healthRecords.size() > 5 ? healthRecords.subList(0, 5) : healthRecords);
+        } catch (Exception e) {
+            vo.setRecentHealthRecords(List.of());
+        }
+
+        // 最近 5 条预约
+        try {
+            List<Appointment> appointments = appointmentMapper.findByUserId(id);
+            vo.setRecentAppointments(appointments.size() > 5 ? appointments.subList(0, 5) : appointments);
+        } catch (Exception e) {
+            vo.setRecentAppointments(List.of());
+        }
+
+        // 最近 5 条积分流水
+        try {
+            List<PointTransaction> points = pointTransactionMapper.findByUserId(id);
+            vo.setRecentPointTransactions(points.size() > 5 ? points.subList(0, 5) : points);
+        } catch (Exception e) {
+            vo.setRecentPointTransactions(List.of());
+        }
+
+        return vo;
     }
 }

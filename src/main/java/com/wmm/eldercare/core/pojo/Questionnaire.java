@@ -18,6 +18,9 @@ public class Questionnaire {
     private String title;               // 问卷标题
     private String description;         // 问卷描述
     private String status;              // 状态：DRAFT 草稿/PUBLISHED 已发布
+    private Integer totalScore;         // 问卷满分（仅计分题 max_score 之和）
+    private Integer passScore;          // 及格线（百分制）
+    private String gradeRules;          // 评分等级规则 JSON
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Integer deleted;            // 逻辑删除：0 未删除/1 已删除

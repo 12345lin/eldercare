@@ -56,8 +56,14 @@ public class AuthController {
         rt.setCreateTime(LocalDateTime.now());
         rt.setExpireTime(LocalDateTime.now().plusDays(jwtUtil.getRefreshTokenExpireDays()));
         refreshTokenService.saveRefreshToken(rt);
-        //4. 返回两个 Token
-        return Result.success(Map.of("accessToken", accessToken, "refreshToken", refreshToken));
+        //4. 返回 Token + 用户信息
+        return Result.success(Map.of(
+            "accessToken", accessToken,
+            "refreshToken", refreshToken,
+            "userId", String.valueOf(user.getId()),
+            "phone", user.getPhone(),
+            "role", user.getRole()
+        ));
     }
 
     @PostMapping("/register")

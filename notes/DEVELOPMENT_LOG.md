@@ -48,5 +48,27 @@
 ```
 ADMIN token → /api/admin/dashboard = 200 ✅
 MEMBER token → /api/admin/dashboard = 403 ✅  
-MEMBER token → /api/activities = 200 ✅
+ADMIN token → /api/activities = 200 ✅
 ```
+
+## 前端开发启动（2026-08-19）
+
+**项目**：`E:\DevProject\Java_Project\Web-Project\eldercare-vue`（Vue3 + Vant + Pinia + Axios + ECharts，无TS）
+
+**完成：**
+- ✅ 全站暖金高端 UI 统一（落地页/登录/注册/重置/首页）
+- ✅ 官网落地页（颐锦康养·养老院：Hero/关于/服务/园区/页脚）
+- ✅ 会员端 9 页面（登录/注册/首页/健康/积分/评测/AI/预约/活动/消息/个人中心）
+- ✅ 会员端响应式布局（手机全屏 / PC 居中卡片）
+- ✅ 底部导航吸底修复（flex 布局）
+- ✅ Vant 全局主题统一（main.js）
+
+**待办：**
+- ⏳ 图片素材（落地页/首页「待替换实拍」占位，等宝宝提供）
+- ⏳ 管理端开发（Element Plus，后端 /api/admin/** 已就绪）
+- ⏳ 会员端真实数据联调打磨
+
+**接口对接**：api/member.js 已封装全部会员端接口；后端 8080，前端 5173（vite proxy 已配）
+**测试账号**：13812345679 / NewPass@123456（ADMIN）
+
+⭐ 完整交接文档：`eldercare-vue/FRONTEND_HANDOFF.md`（接手必读）

@@ -8,10 +8,12 @@ import com.wmm.eldercare.core.pojo.AiConversationMessage;
 import com.wmm.eldercare.core.pojo.AiConversationSession;
 import com.wmm.eldercare.core.pojo.SysConfig;
 import com.wmm.eldercare.core.service.ChatService;
+import com.wmm.eldercare.core.tool.AppointmentTools;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +27,7 @@ public class ChatServiceImpl implements ChatService {
     private final AiConversationMessageMapper messageMapper;
     private final SysConfigMapper sysConfigMapper;
     private final ChatClient chatClient;
+    private final AppointmentTools appointmentTools;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -105,12 +108,19 @@ public class ChatServiceImpl implements ChatService {
             history.append(role).append(": ").append(msg.getMessage()).append("\n");
         }
 
-        // 6. 调用 AI
-        String aiResponse = chatClient.prompt()
-            .system(systemPrompt)
-            .user(history.toString() + "\n用户: " + message)
-            .call()
-            .content();
+        // 6. 调用 AI（挂载预约工具，实现"AI帮用户预约"）
+        String aiResponse;
+        AppointmentTools.bindUser(userId);
+        try {
+            aiResponse = chatClient.prompt()
+                .system(systemPrompt)
+                .user(history.toString() + "\n用户: " + message)
+                .tools(appointmentTools)   // 让 AI 能调用搜索套餐/查时段/下单预约
+                .call()
+                .content();
+        } finally {
+            AppointmentTools.clearUser();
+        }
 
         // 7. 保存 AI 回复
         AiConversationMessage assistantMsg = new AiConversationMessage();
@@ -124,6 +134,98 @@ public class ChatServiceImpl implements ChatService {
         messageMapper.insert(assistantMsg);
 
         return aiResponse;
+    }
+
+    @Override
+    public void sendMessageStream(Long userId, Long sessionId, String message, SseEmitter emitter) {
+        // 1. 校验会话
+        AiConversationSession session = sessionMapper.findById(sessionId);
+        if (session == null || !userId.equals(session.getUserId())) {
+            try {
+                emitter.send(SseEmitter.event().name("error").data("会话不存在或无权访问"));
+            } catch (Exception ignored) {}
+            emitter.complete();
+            return;
+        }
+
+        // 2. 保存用户消息
+        AiConversationMessage userMsg = new AiConversationMessage();
+        userMsg.setSessionId(sessionId);
+        userMsg.setUserId(userId);
+        userMsg.setRole("user");
+        userMsg.setMessage(message);
+        userMsg.setCreateTime(LocalDateTime.now());
+        userMsg.setUpdateTime(LocalDateTime.now());
+        userMsg.setDeleted(0);
+        messageMapper.insert(userMsg);
+
+        // 3. 最近上下文
+        List<AiConversationMessage> allMessages = messageMapper.findBySessionId(sessionId);
+        List<AiConversationMessage> context = allMessages.subList(
+            Math.max(0, allMessages.size() - 20), allMessages.size());
+        String systemPrompt = getSystemPrompt();
+        StringBuilder history = new StringBuilder();
+        for (AiConversationMessage msg : context) {
+            String role = "user".equals(msg.getRole()) ? "用户" : "AI";
+            history.append(role).append(": ").append(msg.getMessage()).append("\n");
+        }
+
+        // 4. 流式调用 AI（Flux 逐 token 推送，前端打字机）
+        StringBuilder full = new StringBuilder();
+        AppointmentTools.bindUser(userId);
+        try {
+            chatClient.prompt()
+                .system(systemPrompt)
+                .user(history.toString() + "\n用户: " + message)
+                .tools(appointmentTools)
+                .stream()
+                .content()
+                .doOnNext(chunk -> {
+                    if (chunk != null && !chunk.isEmpty()) {
+                        full.append(chunk);
+                        try {
+                            // 每个片段作为 SSE 的 data 事件推送
+                            emitter.send(SseEmitter.event().name("message").data(chunk));
+                        } catch (Exception e) {
+                            // 客户端断开，忽略
+                            throw new RuntimeException(e);
+                        }
+                    }
+                })
+                .doOnComplete(() -> {
+                    try {
+                        emitter.send(SseEmitter.event().name("done").data(full.toString()));
+                        emitter.complete();
+                    } catch (Exception ignored) {}
+                })
+                .doOnError(err -> {
+                    try {
+                        emitter.send(SseEmitter.event().name("error").data(err.getMessage() != null ? err.getMessage() : "AI回复失败"));
+                        emitter.complete();
+                    } catch (Exception ignored) {}
+                })
+                .blockLast(); // 阻塞直到流结束（同步执行）
+        } catch (Exception e) {
+            try {
+                emitter.send(SseEmitter.event().name("error").data("AI调用异常"));
+                emitter.complete();
+            } catch (Exception ignored) {}
+        } finally {
+            AppointmentTools.clearUser();
+        }
+
+        // 5. 保存完整 AI 回复
+        if (full.length() > 0) {
+            AiConversationMessage assistantMsg = new AiConversationMessage();
+            assistantMsg.setSessionId(sessionId);
+            assistantMsg.setUserId(userId);
+            assistantMsg.setRole("assistant");
+            assistantMsg.setMessage(full.toString());
+            assistantMsg.setCreateTime(LocalDateTime.now());
+            assistantMsg.setUpdateTime(LocalDateTime.now());
+            assistantMsg.setDeleted(0);
+            messageMapper.insert(assistantMsg);
+        }
     }
 
     /**

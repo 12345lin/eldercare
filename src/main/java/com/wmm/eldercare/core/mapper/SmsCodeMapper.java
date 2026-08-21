@@ -26,4 +26,8 @@ public interface SmsCodeMapper {
      */
     int updateUsed(Long id);
 
+    /**
+     * 清理过期的短信验证码（定时任务）
+     */
+    int deleteExpired();
 }
