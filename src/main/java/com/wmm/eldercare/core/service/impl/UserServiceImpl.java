@@ -12,14 +12,18 @@ import com.wmm.eldercare.core.pojo.UserPointRecord;
 import com.wmm.eldercare.core.pojo.PointTransaction;
 import com.wmm.eldercare.core.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
@@ -27,6 +31,11 @@ public class UserServiceImpl implements UserService {
     private final UserPointRecordMapper userPointRecordMapper;
 
     private final PointTransactionMapper pointTransactionMapper;
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    // Redis 缓存 key 前缀
+    private static final String USER_CACHE_PREFIX = "user:info:";
 
     @Override
     @Transactional
@@ -73,18 +82,27 @@ public class UserServiceImpl implements UserService {
 
 
     /**
-     * 根据用户ID查询用户
+     * 根据用户ID查询用户（带 Redis 缓存）
      * @param id
      * @return
      */
     @Override
     public User findUserById(Long id) {
-        // 调用数据访问层根据用户ID查询用户
+        // 1. 先查 Redis 缓存
+        String cacheKey = USER_CACHE_PREFIX + id;
+        User cachedUser = (User) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedUser != null) {
+            log.debug("命中用户缓存: id={}", id);
+            return cachedUser;
+        }
+        // 2. 缓存未命中，查数据库
         User user = userMapper.findUserById(id);
-        // 检查用户是否存在
         if (user == null) {
             throw new BusinessException(404, "用户不存在");
         }
+        // 3. 写入 Redis 缓存，TTL 5分钟
+        redisTemplate.opsForValue().set(cacheKey, user, 5, TimeUnit.MINUTES);
+        log.debug("用户信息已缓存: id={}", id);
         return user;
     }
 

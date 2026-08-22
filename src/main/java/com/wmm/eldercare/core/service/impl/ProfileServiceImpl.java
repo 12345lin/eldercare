@@ -9,6 +9,7 @@ import com.wmm.eldercare.core.pojo.User;
 import com.wmm.eldercare.core.service.ProfileService;
 import com.wmm.eldercare.core.vo.ProfileStatsVO;
 import com.wmm.eldercare.core.vo.ProfileVO;
+import com.wmm.eldercare.core.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileServiceImpl implements ProfileService {
 
     private final UserMapper userMapper;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final ActivityRegistrationMapper activityRegistrationMapper;
     private final AppointmentMapper appointmentMapper;
@@ -35,7 +37,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileVO getProfile(Long userId) {
         //1.根据用户 ID 查询用户信息
-        User user = userMapper.findUserById(userId);
+        User user = userService.findUserById(userId);
         if (user == null) {
             throw new BusinessException(400, "用户不存在");
         }
@@ -63,7 +65,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void updateProfile(Long userId, ProfileUpdateDTO dto) {
         //1.根据用户 ID 查询用户信息
-        User user = userMapper.findUserById(userId);
+        User user = userService.findUserById(userId);
         if (user == null) {
             throw new BusinessException(400, "用户不存在");
         }
@@ -117,7 +119,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileStatsVO getStats(Long userId) {
         //1.根据用户 ID 查询用户信息
-        User user = userMapper.findUserById(userId);
+        User user = userService.findUserById(userId);
         if (user == null) {
             throw new BusinessException(400, "用户不存在");
         }

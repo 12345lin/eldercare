@@ -15,6 +15,7 @@ import com.wmm.eldercare.core.util.SmsUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,6 +38,9 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final SmsUtil smsUtil;
     private final SmsCodeMapper smsCodeMapper;
+    
+    // Redis 模板
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @PostMapping("/login")
     public Result<Map<String, String>> login(@RequestBody LoginDTO loginDTO) {
@@ -82,29 +87,18 @@ public class AuthController {
         newUser.setPhone(phone);
         newUser.setPassword(encodePassword);
         newUser.setRealName(realName);
-        //3. 校验验证码
+        //3. 校验验证码（从 Redis 获取）
         String smsCode = registerDTO.getSmsCode();
-        SmsCode smsCodeEntity = smsCodeMapper.findByPhone(phone);
-        log.info("注册验证码校验: phone={}, 前端传的是[{}], 数据库查得[{}]", phone, smsCode, smsCodeEntity != null ? smsCodeEntity.getCode() : "null");
-        //3.1 没发过验证码 → 直接拒绝（防止空指针）
-        if (smsCodeEntity == null) {
+        String redisCode = (String) redisTemplate.opsForValue().get("sms:code:" + phone);
+        if (redisCode == null) {
             throw new BusinessException(400, "请先获取验证码");
         }
-        //3.2 比对验证码是否正确
-        if (smsCode == null || !smsCode.equals(smsCodeEntity.getCode())) {
+        if (!smsCode.equals(redisCode)) {
             throw new BusinessException(400, "验证码错误");
         }
-        //4. 校验验证码是否过期
-        if (smsCodeEntity.getExpireTime().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(400, "验证码已过期");
-        }
-        //5. 校验验证码是否已使用
-        if (smsCodeEntity.getUsed() == 1) {
-            throw new BusinessException(400, "验证码已使用");
-        }
-        //6. 更新验证码为已使用
-        smsCodeMapper.updateUsed(smsCodeEntity.getId());
-        //7. 保存用户
+        //4. 验证码使用成功后删除
+        redisTemplate.delete("sms:code:" + phone);
+        //5. 保存用户
         userService.addUser(newUser);
         return Result.success("注册成功，请登录");
     }
@@ -154,15 +148,18 @@ public class AuthController {
         }
         //2. 生成验证码
         String smsCode = smsUtil.getSmsCode(phone);
-        //3. 保存验证码到数据库
-        SmsCode smsCodeEntity = new SmsCode();   // 造一张新卡
+        //3. 保存到 Redis（TTL 5分钟，自动过期）
+        redisTemplate.opsForValue().set("sms:code:" + phone, smsCode, 5, TimeUnit.MINUTES);
+        log.info("短信验证码已存入Redis: phone={}, code={}", phone, smsCode);
+        //4. 同时保留一条到数据库（用于审计）
+        SmsCode smsCodeEntity = new SmsCode();
         smsCodeEntity.setPhone(phone);
         smsCodeEntity.setCode(smsCode);
         smsCodeEntity.setExpireTime(LocalDateTime.now().plusMinutes(5));
         smsCodeEntity.setUsed(0);
         smsCodeEntity.setCreateTime(LocalDateTime.now());
-        smsCodeMapper.insertSmsCode(smsCodeEntity);   // 存进数据库
-        //4. 返回验证码
+        smsCodeMapper.insertSmsCode(smsCodeEntity);
+        //5. 返回验证码
         return Result.success(smsCode);
     }
 
@@ -178,19 +175,14 @@ public class AuthController {
             if(!resetPasswordDTO.getPassword().equals(resetPasswordDTO.getConfirmPassword())){
                 throw new BusinessException(400, "两次密码不相同");
             }
-            //3.验证码是否正确
-            SmsCode smsCodeEntity = smsCodeMapper.findByPhone(resetPasswordDTO.getPhone());
-            if(smsCodeEntity == null){
+            //3.验证码是否正确（从Redis获取）
+            String phone = resetPasswordDTO.getPhone();
+            String redisCode = (String) redisTemplate.opsForValue().get("sms:code:" + phone);
+            if (redisCode == null) {
                 throw new BusinessException(400, "请先获取验证码");
             }
-            if(!smsCodeEntity.getCode().equals(resetPasswordDTO.getCode())){
+            if (!resetPasswordDTO.getCode().equals(redisCode)) {
                 throw new BusinessException(400, "验证码错误");
-            }
-            if (smsCodeEntity.getExpireTime().isBefore(LocalDateTime.now())) {
-                throw new BusinessException(400, "验证码已过期");
-            }
-            if (smsCodeEntity.getUsed() == 1) {
-                throw new BusinessException(400, "验证码已使用");
             }
             //4.更新密码（先改密码，成功后再作废验证码；失败会回滚，验证码不会被"吃掉"）
             user.setPassword(passwordEncoder.encode(resetPasswordDTO.getPassword()));
@@ -198,8 +190,8 @@ public class AuthController {
             if(rows == 0){
                 throw new BusinessException(400, "密码重置失败");
             }
-            //5. 验证码使用成功后才标记已使用
-            smsCodeMapper.updateUsed(smsCodeEntity.getId());
+            //5. 验证码使用成功后删除
+            redisTemplate.delete("sms:code:" + phone);
             //6. 删除所有刷新令牌，强制用户重新登录
             refreshTokenService.deleteByUserId(user.getId());
             return Result.success("密码重置成功，请重新登录");
